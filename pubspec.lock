@@ -65,6 +65,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.10.0"
+  flame_texturepacker:
+    dependency: "direct main"
+    description:
+      name: flame_texturepacker
+      sha256: "9eccc25973aa2a5181e8a233b80f7a491f670c635d643cc86e27558662bfa3b3"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.0"
   flutter:
     dependency: "direct main"
     description: flutter
