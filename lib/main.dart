@@ -1,68 +1,34 @@
-// import 'package:flame/components.dart';
-// import 'package:flame/sprite.dart';
-
-// import 'package:flame_texturepacker/flame_texturepacker.dart';
-// import 'package:flame/flame.dart';
-// import 'package:flame/sprite.dart';
-// import 'package:flame/extensions.dart'; // For Vector2
-// import 'package:flame/animation.dart' as flame_animation;
-// import 'package:flame/game.dart';
-import 'dart:ui';
 import 'package:flutter/material.dart';
-// import 'package:examples/commons/ember.dart';
 import 'package:flame/components.dart';
-import 'package:flame/events.dart';
 import 'package:flame/game.dart';
+
+import '/utility/sprite_utils.dart';
+import '/utility/tiles_info.dart';
 
 void main() {
   print('start game');
   runApp(GameWidget(
-    game: AsepriteExample(),
+    game: ShiftWizard(),
   ));
 }
 
-class AsepriteExample extends FlameGame {
-  static const String description = '''
-    This example shows how to load animations from an Aseprite json file and a
-    sprite sheet. There is no interaction on this example.
-  ''';
-
+class ShiftWizard extends FlameGame {
   @override
   Future<void> onLoad() async {
-    // final chopperImage = await images.load('chopper.png');
-    // final chopperJsonData = await assets.readJson('chopper.json');
-    // final chopperAnimation =
-    //     SpriteAnimation.fromAsepriteData(chopperImage, chopperJsonData);
     final spriteSize = Vector2.all(200);
-    // final chopperComponent = SpriteAnimationComponent(
-    //   animation: chopperAnimation,
-    //   position: (size - spriteSize) / 2,
-    //   size: spriteSize,
-    // );
-    // add(chopperComponent);
-
-    final wizardImage = await images.load('wizard.png');    
-    final sprite1 = Sprite(wizardImage,
-        srcPosition: Vector2(0, 0), srcSize: Vector2(64, 64));
-    final sprite2 = Sprite(wizardImage,
-        srcPosition: Vector2(64, 0), srcSize: Vector2(64, 64));
-    final sprite3 = Sprite(wizardImage,
-        srcPosition: Vector2(128, 0), srcSize: Vector2(64, 64));
-    final sprite4 = Sprite(wizardImage,
-        srcPosition: Vector2(192, 0), srcSize: Vector2(64, 64));
-    final sprite5 = Sprite(wizardImage,
-        srcPosition: Vector2(256, 0), srcSize: Vector2(64, 64));
-    final sprite6 = Sprite(wizardImage,
-        srcPosition: Vector2(320, 0), srcSize: Vector2(64, 64));
-    final sprites = [sprite1, sprite2, sprite3, sprite4, sprite5, sprite6];
-
-    final wizardAnimation = SpriteAnimation.spriteList(sprites, stepTime: .1);
-    final wizardComponent = SpriteAnimationComponent(
-      animation: wizardAnimation,
-      position: (size - spriteSize) / 2,
-      size: spriteSize,
-    );
-    add(wizardComponent);
+    for (var imagePath in tilesInfo.keys) {
+      final positions = tilesInfo[imagePath]?['positions'] as List<Vector2>;
+      final stepTime = tilesInfo[imagePath]?['stepTime'] as double;
+      final sprites = await loadSprites(
+          images, imagePath, positions, Vector2(64, 64));
+      final animation = SpriteAnimation.spriteList(sprites, stepTime: stepTime);
+      final component = SpriteAnimationComponent(
+        animation: animation,
+        position: (size - spriteSize) / 2,
+        size: spriteSize,
+      );
+      add(component);
+    }
   }
 }
 
