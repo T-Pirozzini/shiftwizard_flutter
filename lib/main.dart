@@ -1,7 +1,10 @@
+import 'package:flame/flame.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flame/palette.dart';
+import 'package:shift_wizard_flutter/shift_wizard.dart';
 import 'dart:math';
 
 import '/utility/sprite_utils.dart';
@@ -35,7 +38,11 @@ import '/utility/tiles_info.dart';
 // }
 
 void main() {
-  runApp(ShiftWizardApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  Flame.device.fullScreen();
+  Flame.device.setLandscape();
+  ShiftWizard game = ShiftWizard();
+  runApp(GameWidget(game: kDebugMode ? ShiftWizard(): game));
 }
 
 class ShiftWizardApp extends StatelessWidget {
