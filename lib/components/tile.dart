@@ -17,7 +17,7 @@ class Tile extends SpriteAnimationComponent {
     // Load the animation for the tile based on its tileType
     animation = await _loadAnimationForType(tileType);
     // If you have a fixed size for tiles, you can set it here
-    size = Vector2(50.0, 50.0); // Example size, adjust as needed
+    size = Vector2(60.0, 60.0); // Example size, adjust as needed
   }
 
   Future<SpriteAnimation> _loadAnimationForType(TileType tileType) async {
@@ -61,7 +61,7 @@ class Tile extends SpriteAnimationComponent {
         image: image,
         srcSize: Vector2(
             image.width / frameCount, // Calculate the width of a single frame
-            50.0 // The height of the frame
+            60.0 // The height of the frame
             ));
   }
 }

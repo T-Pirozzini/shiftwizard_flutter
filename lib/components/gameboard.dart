@@ -7,6 +7,7 @@ class GameBoard extends PositionComponent {
   final int columns;
   late List<Tile> tiles;
   late Vector2 tileSize; // Define the size for each tile
+  final double spacing = 15.0; // Define the spacing between tiles
 
   GameBoard(this.rows, this.columns, this.tileSize) {
     tiles = generateTiles();
@@ -30,8 +31,8 @@ class GameBoard extends PositionComponent {
     for (int i = 0; i < rows * columns; i++) {
       // Calculate the position for each tile
       Vector2 tilePosition = Vector2(
-        (i % columns) * tileSize.x, // x position
-        (i ~/ columns) * tileSize.y, // y position
+        (i % columns) * (tileSize.x + spacing), // x position
+        (i ~/ columns) * (tileSize.y + spacing), // y position
       );
 
       // Assuming the Tile constructor takes a position
