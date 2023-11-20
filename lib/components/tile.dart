@@ -1,14 +1,27 @@
 import 'package:flame/components.dart';
+import 'package:flame/events.dart';
 import 'package:flame/sprite.dart';
 import 'package:flame/flame.dart';
 
 enum TileType { Red, Yellow, Green, Blue }
 
-class Tile extends SpriteAnimationComponent {
+class Tile extends SpriteAnimationComponent with TapCallbacks {
   final TileType tileType;
 
-  Tile({required this.tileType, Vector2? size}) : super(size: size) {
+  // Add a callback function for when the tile is tapped
+  final Function(Tile) onTileTapped;
+
+  Tile({required this.tileType, Vector2? size, required this.onTileTapped})
+      : super(size: size) {
     // Size can be passed to the super constructor
+  }
+
+  @override
+  void onTapDown(TapDownEvent event) {
+    // Call the callback function when the tile is tapped
+    onTileTapped(this);
+    print(event);
+    print("Tile tapped!");
   }
 
   @override

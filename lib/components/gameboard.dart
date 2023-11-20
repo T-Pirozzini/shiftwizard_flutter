@@ -8,26 +8,32 @@ class GameBoard extends PositionComponent {
   late List<Tile> tiles;
   late Vector2 tileSize; // Define the size for each tile
   final double spacing = 15.0; // Define the spacing between tiles
+  final Function(Tile) onTileTapped; // Add this line
 
-  GameBoard(this.rows, this.columns, this.tileSize) {
-    tiles = generateTiles();
+  GameBoard(this.rows, this.columns, this.tileSize, this.onTileTapped)
+      : super() {
+    tiles = generateTiles(onTileTapped);
   }
 
-  List<Tile> generateDeck() {
+  List<Tile> generateDeck(Function(Tile) onTileTapped) {
     List<Tile> deck = [];
     // Add 20 tiles of Red, Yellow, and Green each, and 10 Blue tiles
-    deck.addAll(List.generate(20, (_) => Tile(tileType: TileType.Red)));
-    deck.addAll(List.generate(20, (_) => Tile(tileType: TileType.Yellow)));
-    deck.addAll(List.generate(20, (_) => Tile(tileType: TileType.Green)));
-    deck.addAll(List.generate(10, (_) => Tile(tileType: TileType.Blue)));
+    deck.addAll(List.generate(
+        20, (_) => Tile(tileType: TileType.Red, onTileTapped: (tile) {})));
+    deck.addAll(List.generate(
+        20, (_) => Tile(tileType: TileType.Yellow, onTileTapped: (tile) {})));
+    deck.addAll(List.generate(
+        20, (_) => Tile(tileType: TileType.Green, onTileTapped: (tile) {})));
+    deck.addAll(List.generate(
+        10, (_) => Tile(tileType: TileType.Blue, onTileTapped: (tile) {})));
 
     deck.shuffle(); // Shuffle the deck
     return deck;
   }
 
-  List<Tile> generateTiles() {
+  List<Tile> generateTiles(Function(Tile) onTileTapped) {
     List<Tile> generatedTiles = [];
-    List<Tile> deck = generateDeck();
+    List<Tile> deck = generateDeck(onTileTapped);
     for (int i = 0; i < rows * columns; i++) {
       // Calculate the position for each tile
       Vector2 tilePosition = Vector2(
