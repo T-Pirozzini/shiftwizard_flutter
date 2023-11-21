@@ -72,7 +72,7 @@ flutter:
     - assets/images/tiles/blue_tile.png    
     - assets/images/parallax/bg.png  
     - assets/images/parallax/  
-    - assets/images/actors/  
+    - assets/images/main_characters/wizard/  
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

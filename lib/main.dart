@@ -1,10 +1,16 @@
+import 'package:flame/flame.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shift_wizard_flutter/shiftwizard_game.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 
 void main() {
-  final game = ShiftWizardGame();
+  WidgetsFlutterBinding.ensureInitialized();
+  Flame.device.fullScreen();
+  Flame.device.setLandscape();
+
+  ShiftWizardGame game = ShiftWizardGame();
   runApp(
-    SafeArea(child: GameWidget(game: game)),
+    GameWidget(game: kDebugMode ? ShiftWizardGame() : game),
   );
 }

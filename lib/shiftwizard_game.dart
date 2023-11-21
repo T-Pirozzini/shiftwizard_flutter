@@ -6,10 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:shift_wizard_flutter/components/gameboard.dart';
 import 'package:shift_wizard_flutter/components/parallax.dart';
 import 'package:shift_wizard_flutter/components/play_area.dart';
-import 'package:shift_wizard_flutter/components/player.dart';
+import 'package:shift_wizard_flutter/actors/player.dart';
 import 'package:shift_wizard_flutter/components/tile.dart';
 import 'package:shift_wizard_flutter/hud.dart';
 import 'package:flame/text.dart';
+import 'package:shift_wizard_flutter/levels/level.dart';
 
 enum WizardState {
   idle,
@@ -20,7 +21,7 @@ class ShiftWizardGame extends FlameGame with TapDetector {
   late GameBoard gameBoard;
   late CollectedCardDisplay collectedCardDisplay;
   late HUD hud;
-  late WizardAnimation wizardAnimation;
+  // late WizardAnimation wizardAnimation;
 
   @override
   bool debugMode = true;
@@ -30,6 +31,8 @@ class ShiftWizardGame extends FlameGame with TapDetector {
         // camera: CameraComponent.withFixedResolution(width: 400, height: 1024),
         // world: HUD(),
         ) {}
+  late final CameraComponent cam;
+  final world = Level();
 
   // Player turn indicator
   List<Tile> player1Collection = [];
@@ -82,6 +85,14 @@ class ShiftWizardGame extends FlameGame with TapDetector {
 
   @override
   Future<void> onLoad() async {
+    // Load all images into cache
+    await images.loadAllImages();
+
+    cam = CameraComponent.withFixedResolution(
+        world: world, width: 640, height: 360);
+    cam.viewfinder.anchor = Anchor.topLeft;
+    addAll([cam, world]);
+
     super.onLoad();
 
     add(MyParallaxComponent());
@@ -150,15 +161,15 @@ class ShiftWizardGame extends FlameGame with TapDetector {
     );
 
     // Create and add the WizardAnimation component
-    final wizardAnimation = WizardAnimation(
-      runningAnimation: runningAnimation,
-      idleAnimation: idleAnimation,
-      onTileTapped: (wizard) {
-        // Handle tile tap
-        print('Wizard Tapped!');
-      },
-    );
-    add(wizardAnimation);
+    // final wizardAnimation = WizardAnimation(
+    //   runningAnimation: runningAnimation,
+    //   idleAnimation: idleAnimation,
+    //   onTileTapped: (wizard) {
+    //     // Handle tile tap
+    //     print('Wizard Tapped!');
+    //   },
+    // );
+    // add(wizardAnimation);
   }
 
   @override
