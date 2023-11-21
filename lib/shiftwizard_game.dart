@@ -1,11 +1,28 @@
+import 'package:flame/components.dart';
 import 'package:flame/game.dart';
+import 'package:flame/input.dart';
+import 'package:flame/palette.dart';
+import 'package:flutter/material.dart';
 import 'package:shift_wizard_flutter/components/gameboard.dart';
 import 'package:shift_wizard_flutter/components/parallax.dart';
 import 'package:shift_wizard_flutter/components/play_area.dart';
 import 'package:shift_wizard_flutter/components/tile.dart';
+import 'package:shift_wizard_flutter/hud.dart';
+import 'package:flame/text.dart';
 
 class ShiftWizardGame extends FlameGame {
   late GameBoard gameBoard;
+  late CollectedCardDisplay collectedCardDisplay;
+  late HUD hud;
+
+  @override
+  bool debugMode = false;
+
+  ShiftWizardGame()
+      : super(
+          camera: CameraComponent.withFixedResolution(width: 400, height: 1024),
+          world: HUD(),
+        ) {}
 
   // Player turn indicator
   int currentPlayer = 1; // Start with player 1
@@ -44,11 +61,6 @@ class ShiftWizardGame extends FlameGame {
     // and implement logic based on the current player
   }
 
-  late CollectedCardDisplay collectedCardDisplay;
-
-  @override
-  bool debugMode = false;
-
   @override
   Future<void> onLoad() async {
     super.onLoad();
@@ -70,6 +82,21 @@ class ShiftWizardGame extends FlameGame {
 
     collectedCardDisplay = CollectedCardDisplay();
     add(collectedCardDisplay);
+
+    hud = HUD();
+    add(hud);
+
+    final textRenderer = TextPaint(
+      style: TextStyle(fontSize: 25, color: BasicPalette.white.color),
+    );
+    camera.viewfinder.add(
+      TextButton(
+        text: 'Play Again?',
+        textRenderer: textRenderer,
+        position: Vector2(0, 400),
+        anchor: Anchor.center,
+      ),
+    );
   }
 
   @override
@@ -79,4 +106,33 @@ class ShiftWizardGame extends FlameGame {
   }
 
   // Other game logic methods...
+}
+
+class TextButton extends ButtonComponent {
+  TextButton({
+    required String text,
+    required super.position,
+    super.anchor,
+    TextRenderer? textRenderer,
+  }) : super(
+          button: RectangleComponent(
+            size: Vector2(200, 100),
+            paint: Paint()
+              ..color = Colors.orange
+              ..strokeWidth = 2
+              ..style = PaintingStyle.stroke,
+          ),
+          buttonDown: RectangleComponent(
+            size: Vector2(200, 100),
+            paint: Paint()..color = BasicPalette.orange.color.withOpacity(0.5),
+          ),
+          children: [
+            TextComponent(
+              text: text,
+              textRenderer: textRenderer,
+              position: Vector2(100, 50),
+              anchor: Anchor.center,
+            ),
+          ],
+        );
 }
