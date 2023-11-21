@@ -1,5 +1,6 @@
 import 'package:flame/game.dart';
 import 'package:shift_wizard_flutter/components/gameboard.dart';
+import 'package:shift_wizard_flutter/components/parallax.dart';
 import 'package:shift_wizard_flutter/components/play_area.dart';
 import 'package:shift_wizard_flutter/components/tile.dart';
 
@@ -46,14 +47,19 @@ class ShiftWizardGame extends FlameGame {
   late CollectedCardDisplay collectedCardDisplay;
 
   @override
+  bool debugMode = false;
+
+  @override
   Future<void> onLoad() async {
     super.onLoad();
+    add(MyParallaxComponent());
     Vector2 tileSize = Vector2(
       // Define the tile size // Set the width and height for each tile
       50.0, 50.0,
     );
 
-    gameBoard = GameBoard(5, 5, tileSize, handleTileInteraction); // Create an instance of GameBoard
+    gameBoard = GameBoard(5, 5, tileSize,
+        handleTileInteraction); // Create an instance of GameBoard
     // After creating the gameBoard, set its position to center it
     Vector2 boardSize = Vector2(
       gameBoard.columns * (tileSize.x + gameBoard.spacing), // Total width

@@ -70,6 +70,8 @@ flutter:
     - assets/images/tiles/yellow_tile.png
     - assets/images/tiles/green_tile.png
     - assets/images/tiles/blue_tile.png    
+    - assets/images/parallax/bg.png  
+    - assets/images/parallax/  
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
