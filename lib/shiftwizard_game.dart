@@ -1,4 +1,5 @@
 import 'package:flame/components.dart';
+import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flame/input.dart';
 import 'package:flame/palette.dart';
@@ -12,12 +13,7 @@ import 'package:shift_wizard_flutter/hud.dart';
 import 'package:flame/text.dart';
 import 'package:shift_wizard_flutter/levels/level.dart';
 
-enum WizardState {
-  idle,
-  running,
-}
-
-class ShiftWizardGame extends FlameGame with TapDetector {
+class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
   late GameBoard gameBoard;
   late CollectedCardDisplay collectedCardDisplay;
   late HUD hud;
@@ -25,14 +21,9 @@ class ShiftWizardGame extends FlameGame with TapDetector {
 
   @override
   bool debugMode = true;
-
-  ShiftWizardGame()
-      : super(
-        // camera: CameraComponent.withFixedResolution(width: 400, height: 1024),
-        // world: HUD(),
-        ) {}
   late final CameraComponent cam;
-  final world = Level();
+  Player player = Player();
+  late JoystickComponent joystick;
 
   // Player turn indicator
   List<Tile> player1Collection = [];
@@ -88,6 +79,8 @@ class ShiftWizardGame extends FlameGame with TapDetector {
     // Load all images into cache
     await images.loadAllImages();
 
+    final world = Level(player: player);
+
     cam = CameraComponent.withFixedResolution(
         world: world, width: 640, height: 360);
     cam.viewfinder.anchor = Anchor.topLeft;
@@ -111,101 +104,94 @@ class ShiftWizardGame extends FlameGame with TapDetector {
     gameBoard.position = (size - boardSize) / 2; // Center the gameBoard
     add(gameBoard); // Add the gameBoard to the FlameGame
 
-    collectedCardDisplay = CollectedCardDisplay()
-      ..size = Vector2(200, 300) // Set appropriate size
-      ..position = Vector2(110, 700); // Below the gameboard
+    // collectedCardDisplay = CollectedCardDisplay()
+    //   ..size = Vector2(200, 300) // Set appropriate size
+    //   ..position = Vector2(110, 700); // Below the gameboard
 
-    collectedCardDisplay.setCurrentPlayer(currentPlayer);
-    add(collectedCardDisplay);
+    // collectedCardDisplay.setCurrentPlayer(currentPlayer);
+    // add(collectedCardDisplay);
 
     // hud = HUD();
     // add(hud);
 
-    final textRenderer = TextPaint(
-      style: TextStyle(fontSize: 25, color: BasicPalette.white.color),
-    );
-    final textRendererBlk = TextPaint(
-      style: TextStyle(fontSize: 25, color: BasicPalette.black.color),
-    );
-    camera.viewfinder.add(
-      TextButton(
-        text: 'Play Again?',
-        textRenderer: textRenderer,
-        position: Vector2(0, 375),
-        anchor: Anchor.center,
-      ),
-    );
-    camera.viewport.addAll([
-      TextComponent(
-        text: 'SHIFT WIZARD',
-        textRenderer: textRendererBlk,
-        position: Vector2(120, 50),
-      ),
-    ]);
-    // Load animations
-    final runningAnimation = await loadSpriteAnimation(
-      'actors/wizard_animation.png',
-      SpriteAnimationData.sequenced(
-        amount: 4,
-        stepTime: 0.2,
-        textureSize: Vector2(32, 32),
-      ),
-    );
-    final idleAnimation = await loadSpriteAnimation(
-      'actors/wizard_animation.png',
-      SpriteAnimationData.sequenced(
-        amount: 8,
-        stepTime: 0.4,
-        textureSize: Vector2(32, 32),
-      ),
-    );
-
-    // Create and add the WizardAnimation component
-    // final wizardAnimation = WizardAnimation(
-    //   runningAnimation: runningAnimation,
-    //   idleAnimation: idleAnimation,
-    //   onTileTapped: (wizard) {
-    //     // Handle tile tap
-    //     print('Wizard Tapped!');
-    //   },
+    // final textRenderer = TextPaint(
+    //   style: TextStyle(fontSize: 25, color: BasicPalette.white.color),
     // );
-    // add(wizardAnimation);
+    // final textRendererBlk = TextPaint(
+    //   style: TextStyle(fontSize: 25, color: BasicPalette.black.color),
+    // );
+    // camera.viewport.addAll([
+    //   TextComponent(
+    //     text: 'SHIFT WIZARD',
+    //     textRenderer: textRendererBlk,
+    //     position: Vector2(120, 50),
+    //   ),
+    // ]);
+
+    addJoystick();
   }
 
   @override
   void update(double dt) {
+    updateJoystick();
     super.update(dt);
-    // Update your game state
   }
 
-  // Other game logic methods...
-}
+  void addJoystick() {
+    joystick = JoystickComponent(
+      knob: SpriteComponent(
+        sprite: Sprite(
+          images.fromCache('hud/knob.png'),
+        ),
+      ),
+      background: SpriteComponent(
+        sprite: Sprite(
+          images.fromCache('hud/joystick.png'),
+        ),
+      ),
+      position: Vector2(50, 50),
+      margin: const EdgeInsets.only(left: 32, bottom: 32),
+    );
+    add(joystick);
+  }
 
-class TextButton extends ButtonComponent {
-  TextButton({
-    required String text,
-    required super.position,
-    super.anchor,
-    TextRenderer? textRenderer,
-  }) : super(
-          button: RectangleComponent(
-            size: Vector2(200, 50),
-            paint: Paint()
-              ..color = Colors.orange
-              ..strokeWidth = 2
-              ..style = PaintingStyle.stroke,
-          ),
-          buttonDown: RectangleComponent(
-            size: Vector2(200, 50),
-            paint: Paint()..color = BasicPalette.orange.color.withOpacity(0.5),
-          ),
-          children: [
-            TextComponent(
-              text: text,
-              textRenderer: textRenderer,
-              position: Vector2(100, 25),
-              anchor: Anchor.center,
-            ),
-          ],
-        );
+  void updateJoystick() {
+    switch (joystick.direction) {
+      case JoystickDirection.up:
+        player.playerDirection = PlayerDirection.up;
+        player.velocity = Vector2(0, -player.moveSpeed);
+        break;
+      case JoystickDirection.upLeft:
+        player.playerDirection = PlayerDirection.upLeft;
+        player.velocity = Vector2(0, -player.moveSpeed);
+        break;
+      case JoystickDirection.upRight:
+        player.playerDirection = PlayerDirection.upRight;
+        player.velocity = Vector2(0, -player.moveSpeed);
+        break;
+      case JoystickDirection.right:
+        player.playerDirection = PlayerDirection.right;
+        player.velocity = Vector2(player.moveSpeed, 0);
+        break;
+      case JoystickDirection.down:
+        player.playerDirection = PlayerDirection.down;
+        player.velocity = Vector2(0, player.moveSpeed);
+        break;
+      case JoystickDirection.downLeft:
+        player.playerDirection = PlayerDirection.downLeft;
+        player.velocity = Vector2(0, player.moveSpeed);
+        break;
+      case JoystickDirection.downRight:
+        player.playerDirection = PlayerDirection.downRight;
+        player.velocity = Vector2(0, player.moveSpeed);
+        break;
+      case JoystickDirection.left:
+        player.playerDirection = PlayerDirection.left;
+        player.velocity = Vector2(-player.moveSpeed, 0);
+        break;
+      default:
+        player.playerDirection = PlayerDirection.none;
+        break;
+    }
+  }
 }

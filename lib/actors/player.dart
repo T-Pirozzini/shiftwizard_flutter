@@ -6,7 +6,17 @@ import 'package:shift_wizard_flutter/shiftwizard_game.dart';
 
 enum PlayerState { idle, down, right, left, up }
 
-enum PlayerDirection { down, right, left, up, none }
+enum PlayerDirection {
+  down,
+  downRight,
+  downLeft,
+  right,
+  left,
+  up,
+  upRight,
+  upLeft,
+  none
+}
 
 class Player extends SpriteAnimationGroupComponent
     with HasGameRef<ShiftWizardGame>, TapCallbacks {
@@ -23,48 +33,19 @@ class Player extends SpriteAnimationGroupComponent
   double moveSpeed = 100;
   Vector2 velocity = Vector2.zero();
 
-  // final SpriteAnimation runningAnimation;
-  // final SpriteAnimation idleAnimation;
-  // final Function(WizardAnimation) onTileTapped;
-
-  // PlayerAnimation({
-  //   required this.runningAnimation,
-  //   required this.idleAnimation,
-  //   required this.onTileTapped,
-  // }) : super(size: Vector2(32, 32));
-
   @override
   Future<void> onLoad() async {
     _loadAllAnimations();
 
     super.onLoad();
-    // Use the provided animations
-    // animations = {
-    //   WizardState.running: runningAnimation,
-    //   WizardState.idle: idleAnimation,
-    // };
-    // current = WizardState.idle;
-    // position = Vector2(120, 120); // Adjust as needed
-    // size = Vector2(32, 32); // Adjust as needed
   }
 
   @override
-  void onTapDown(_) {
-    current = WizardState.running;
+  void update(double dt) {
+    _updatePlayerMovement(dt);
+
+    super.update(dt);
   }
-
-  // @override
-  // void onTapCancel() {
-  //   current = WizardState.idle;
-  // }
-
-  @override
-  void onTapUp(_) {
-    current = WizardState.idle;
-  }
-
-  @override
-  Color backgroundColor() => const Color(0xFF222222);
 
   void _loadAllAnimations() {
     idleAnimation = _spriteAnimation(0, 0);
@@ -97,5 +78,55 @@ class Player extends SpriteAnimationGroupComponent
         textureSize: Vector2.all(32),
       ),
     );
+  }
+
+  void _updatePlayerMovement(double dt) {
+    double dirX = 0.0;
+    double dirY = 0.0;
+
+    switch (playerDirection) {
+      case PlayerDirection.down:
+        current = PlayerState.down;
+        dirY += moveSpeed;
+        break;
+      case PlayerDirection.downLeft:
+        current = PlayerState.left;
+        dirY += moveSpeed * .75;
+        dirX -= moveSpeed * .75;
+        break;
+      case PlayerDirection.downRight:
+        current = PlayerState.right;
+        dirY += moveSpeed * .75;
+        dirX += moveSpeed * .75;
+        break;
+      case PlayerDirection.right:
+        current = PlayerState.right;
+        dirX += moveSpeed;
+        break;
+      case PlayerDirection.left:
+        current = PlayerState.left;
+        dirX -= moveSpeed;
+        break;
+      case PlayerDirection.up:
+        current = PlayerState.up;
+        dirY -= moveSpeed;
+        break;
+      case PlayerDirection.upLeft:
+        current = PlayerState.left;
+        dirY -= moveSpeed * .75;
+        dirX -= moveSpeed * .75;
+        break;
+      case PlayerDirection.upRight:
+        current = PlayerState.right;
+        dirY -= moveSpeed * .75;
+        dirX += moveSpeed * .75;
+        break;
+      default:
+        current = PlayerState.idle;
+        break;
+    }
+
+    velocity = Vector2(dirX, dirY);
+    position += velocity * dt;
   }
 }
