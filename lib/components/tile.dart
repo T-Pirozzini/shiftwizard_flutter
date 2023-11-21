@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/sprite.dart';
@@ -14,14 +16,6 @@ class Tile extends SpriteAnimationComponent with TapCallbacks {
   Tile({required this.tileType, Vector2? size, required this.onTileTapped})
       : super(size: size) {
     // Size can be passed to the super constructor
-  }
-
-  @override
-  void onTapDown(TapDownEvent event) {
-    // Call the callback function when the tile is tapped
-    onTileTapped(this);
-    print(event);
-    print("Tile tapped!");
   }
 
   @override
@@ -77,4 +71,14 @@ class Tile extends SpriteAnimationComponent with TapCallbacks {
             60.0 // The height of the frame
             ));
   }
+
+  @override
+  void onTapDown(TapDownEvent event) {
+    // Call the callback function when the tile is tapped
+    onTileTapped(this);
+    print(event);
+    print("Tile tapped!");
+  }
+
+  void renderPositioned(Canvas canvas, Vector2 vector2) {}
 }

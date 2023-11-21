@@ -23,62 +23,75 @@ class ShiftWizardGame extends FlameGame with TapDetector {
   late WizardAnimation wizardAnimation;
 
   @override
-  bool debugMode = false;
+  bool debugMode = true;
 
   ShiftWizardGame()
       : super(
-          camera: CameraComponent.withFixedResolution(width: 400, height: 1024),
-          world: HUD(),
+        // camera: CameraComponent.withFixedResolution(width: 400, height: 1024),
+        // world: HUD(),
         ) {}
 
   // Player turn indicator
+  List<Tile> player1Collection = [];
+  List<Tile> player2Collection = [];
   int currentPlayer = 1; // Start with player 1
 
   // Method to switch turns
   void switchTurn() {
     currentPlayer = currentPlayer == 1 ? 2 : 1;
+    collectedCardDisplay.setCurrentPlayer(currentPlayer);
   }
 
-  void handleTileTap(int index) {
-    // Assuming 'tiles' is your list of Tile objects
-    Tile selectedTile = gameBoard.tiles[index];
-
-    // Collect the card for the current player
+  void handleTileTap(Tile tile) {
     if (currentPlayer == 1) {
-      // Collect the card for Player 1
-      // Display it above the gameboard
-      // ...
-      print("Tile $index tapped!");
+      player1Collection.add(tile);
     } else {
-      // Collect the card for Player 2
-      // Display it above the gameboard
-      // ...
-      print("Tile $index tapped!");
+      player2Collection.add(tile);
     }
-
-    // Switch turns after collecting the card
+    updateCollectedCardDisplay();
     switchTurn();
   }
 
-  void handleTileInteraction(Tile tile) {
-    print(tile); // Print the tile's object ID
-    print('tile tapped!! in shiftwizard_game'); // Print the tile's object ID
-    // Logic when a tile is tapped
-    // You can access the tile's properties here, e.g., tile.tileType
-    // and implement logic based on the current player
+  void updateCollectedCardDisplay() {
+    List<Tile> currentPlayerCollection =
+        (currentPlayer == 1) ? player1Collection : player2Collection;
+    collectedCardDisplay.updateCards(currentPlayerCollection);
+  }
+
+  @override
+  void render(Canvas canvas) {
+    super.render(canvas);
+    renderCollectedTiles(canvas, player1Collection, Vector2(10, size.y - 100));
+    renderCollectedTiles(
+        canvas, player2Collection, Vector2(size.x - 210, size.y - 100));
+  }
+
+  void renderCollectedTiles(
+      Canvas canvas, List<Tile> tiles, Vector2 startPosition) {
+    double x = startPosition.x;
+    double y = startPosition.y;
+    for (var tile in tiles) {
+      tile.renderPositioned(canvas, Vector2(x, y));
+      x += tile.size.x + 5;
+      if (x + tile.size.x > size.x) {
+        x = startPosition.x;
+        y -= tile.size.y + 5;
+      }
+    }
   }
 
   @override
   Future<void> onLoad() async {
     super.onLoad();
+
     add(MyParallaxComponent());
     Vector2 tileSize = Vector2(
       // Define the tile size // Set the width and height for each tile
       50.0, 50.0,
     );
 
-    gameBoard = GameBoard(5, 5, tileSize,
-        handleTileInteraction); // Create an instance of GameBoard
+    gameBoard = GameBoard(
+        5, 5, tileSize, handleTileTap); // Create an instance of GameBoard
     // After creating the gameBoard, set its position to center it
     Vector2 boardSize = Vector2(
       gameBoard.columns * (tileSize.x + gameBoard.spacing), // Total width
@@ -87,11 +100,15 @@ class ShiftWizardGame extends FlameGame with TapDetector {
     gameBoard.position = (size - boardSize) / 2; // Center the gameBoard
     add(gameBoard); // Add the gameBoard to the FlameGame
 
-    collectedCardDisplay = CollectedCardDisplay();
+    collectedCardDisplay = CollectedCardDisplay()
+      ..size = Vector2(200, 300) // Set appropriate size
+      ..position = Vector2(110, 700); // Below the gameboard
+
+    collectedCardDisplay.setCurrentPlayer(currentPlayer);
     add(collectedCardDisplay);
 
-    hud = HUD();
-    add(hud);
+    // hud = HUD();
+    // add(hud);
 
     final textRenderer = TextPaint(
       style: TextStyle(fontSize: 25, color: BasicPalette.white.color),
@@ -101,9 +118,9 @@ class ShiftWizardGame extends FlameGame with TapDetector {
     );
     camera.viewfinder.add(
       TextButton(
-        text: 'PlayAgain?',
+        text: 'Play Again?',
         textRenderer: textRenderer,
-        position: Vector2(0, 400),
+        position: Vector2(0, 375),
         anchor: Anchor.center,
       ),
     );
@@ -111,7 +128,7 @@ class ShiftWizardGame extends FlameGame with TapDetector {
       TextComponent(
         text: 'SHIFT WIZARD',
         textRenderer: textRendererBlk,
-        position: Vector2(120, 100),
+        position: Vector2(120, 50),
       ),
     ]);
     // Load animations
@@ -120,7 +137,7 @@ class ShiftWizardGame extends FlameGame with TapDetector {
       SpriteAnimationData.sequenced(
         amount: 4,
         stepTime: 0.2,
-        textureSize: Vector2(16, 18),
+        textureSize: Vector2(32, 32),
       ),
     );
     final idleAnimation = await loadSpriteAnimation(
@@ -161,21 +178,21 @@ class TextButton extends ButtonComponent {
     TextRenderer? textRenderer,
   }) : super(
           button: RectangleComponent(
-            size: Vector2(200, 100),
+            size: Vector2(200, 50),
             paint: Paint()
               ..color = Colors.orange
               ..strokeWidth = 2
               ..style = PaintingStyle.stroke,
           ),
           buttonDown: RectangleComponent(
-            size: Vector2(200, 100),
+            size: Vector2(200, 50),
             paint: Paint()..color = BasicPalette.orange.color.withOpacity(0.5),
           ),
           children: [
             TextComponent(
               text: text,
               textRenderer: textRenderer,
-              position: Vector2(100, 50),
+              position: Vector2(100, 25),
               anchor: Anchor.center,
             ),
           ],

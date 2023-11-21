@@ -5,6 +5,6 @@ import 'package:flutter/material.dart';
 void main() {
   final game = ShiftWizardGame();
   runApp(
-    GameWidget(game: game),
+    SafeArea(child: GameWidget(game: game)),
   );
 }
