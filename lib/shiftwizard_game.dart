@@ -28,24 +28,7 @@ class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
   late StoredElementsDisplay p1StoredElementsDisplay;
   late StoredElementsDisplay p2StoredElementsDisplay;
 
-  // Method to switch turns
-  void switchTurn() {
-    currentPlayer = currentPlayer == 1 ? 2 : 1;
-
-    // collectedCardDisplay.setCurrentPlayer(currentPlayer);
-  }
-
-  void handleTileTap(Tile tile) {
-    if (currentPlayer == 1) {
-      player1Collection.add(tile);
-      p1StoredElementsDisplay.updateDisplay();
-    } else {
-      player2Collection.add(tile);
-      p2StoredElementsDisplay.updateDisplay();
-    }
-    tile.startCollectedAnimation(); // Start the animation
-    switchTurn();
-  }
+  late TextComponent playerTurnText;
 
   @override
   Future<void> onLoad() async {
@@ -60,20 +43,23 @@ class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
 
     addAll([cam, world]);
 
-    camera.viewport.addAll(
-      [
-        // TextComponent(
-        //   text: 'Player 1: Elements',
-        //   position: Vector2(20, 10),
-        // ),
-        // TextComponent(
-        //   text: 'Player 2: Elements',
-        //   position: Vector2(640, 10),
-        // ),
-      ],
-    );
-
     add(MyParallaxComponent());
+
+    playerTurnText = TextComponent(
+      text: '', // Initial empty text
+      textRenderer: TextPaint(
+        style: const TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+    // Position the text component at the bottom center of the screen
+    // playerTurnText.position = Vector2(300, 300);
+    // playerTurnText.anchor = Anchor.topCenter;
+    add(playerTurnText);
+    updatePlayerTurnText();
 
     // Initialize the stored elements display
     p1StoredElementsDisplay = StoredElementsDisplay(
@@ -113,6 +99,43 @@ class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
   void update(double dt) {
     updateJoystick();
     super.update(dt);
+  }
+
+  // Method to switch turns
+  void switchTurn() {
+    currentPlayer = currentPlayer == 1 ? 2 : 1;
+    updatePlayerTurnText();
+  }
+
+  void handleTileTap(Tile tile) {
+    if (currentPlayer == 1) {
+      if (player1Collection.length < 5) {
+        player1Collection.add(tile);
+        p1StoredElementsDisplay.updateDisplay();
+        tile.startCollectedAnimation(); // Start the animation
+      }
+    } else {
+      if (player2Collection.length < 5) {
+        player2Collection.add(tile);
+        p2StoredElementsDisplay.updateDisplay();
+        tile.startCollectedAnimation(); // Start the animation
+      }
+    }
+    switchTurn(); // switch turn even if no element is stored
+  }
+
+  void updatePlayerTurnText() {
+    String text;
+    if (currentPlayer == 1) {
+      text =
+          "Player 1's Turn:\nYou may play a Stored Element.\nCollect an Element to end your turn.";
+    } else {
+      text =
+          "Player 2's Turn:\nYou may play a Stored Element.\nCollect an Element to end your turn.";
+    }
+
+    playerTurnText.text = text;
+    playerTurnText.position = Vector2(300, 360);
   }
 
   void addJoystick() {

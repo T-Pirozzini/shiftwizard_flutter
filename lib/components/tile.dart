@@ -12,6 +12,7 @@ enum TileType { red, yellow, green, blue }
 class Tile extends SpriteAnimationComponent
     with HasGameRef<ShiftWizardGame>, TapCallbacks {
   final TileType tileType;
+  bool isTapEnabled = true;
 
   // Add a callback function for when the tile is tapped
   final Function(Tile) onTileTapped;
@@ -77,10 +78,11 @@ class Tile extends SpriteAnimationComponent
 
   @override
   void onTapDown(TapDownEvent event) {
-    // Call the callback function when the tile is tapped
-    onTileTapped(this);
-    print(event);
-    print("Tile tapped!!!!");
+    if (isTapEnabled) {
+      onTileTapped(this);
+      print(event);
+      print("Tile tapped!!!!");
+    }
   }
 
   void renderPositioned(Canvas canvas, Vector2 vector2) {
@@ -101,4 +103,9 @@ class Tile extends SpriteAnimationComponent
           () => removeFromParent(), // Optionally remove after completion
     );
   }
+
+  void disableTap() {
+    isTapEnabled = false; // Remove the tap event handler
+  }
+  
 }

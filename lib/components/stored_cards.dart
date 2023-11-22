@@ -32,9 +32,13 @@ class StoredElementsDisplay extends PositionComponent {
     removeAll(children); // Clear existing tiles
 
     double y = 50; // Start position for the first tile
+    double x = 0;
     for (var tile in collectedTiles) {
-      add(tile..position = Vector2(0, y));
-      y += tileSize.y + 5; // Increment Y position for each tile
+      tile.size = Vector2(32, 32);
+      tile.disableTap(); // Disable tap handling
+
+      add(tile..position = Vector2(x, y));
+      x += tile.size.y + 5; // Increment Y position for each tile
     }
   }
 
