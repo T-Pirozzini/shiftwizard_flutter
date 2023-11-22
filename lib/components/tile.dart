@@ -1,14 +1,21 @@
 import 'dart:ui';
 
 import 'package:flame/components.dart';
+import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
 import 'package:flame/sprite.dart';
 import 'package:flame/flame.dart';
+import 'package:flutter/material.dart';
+import 'package:shift_wizard_flutter/shiftwizard_game.dart';
 
-enum TileType { Red, Yellow, Green, Blue }
+enum TileType { red, yellow, green, blue }
 
-class Tile extends SpriteAnimationComponent with TapCallbacks {
+class Tile extends SpriteAnimationComponent
+    with HasGameRef<ShiftWizardGame>, TapCallbacks {
   final TileType tileType;
+  bool isTapEnabled = true;
+  bool isLastCollected =
+      false; // Flag to indicate if this is the last collected tile
 
   // Add a callback function for when the tile is tapped
   final Function(Tile) onTileTapped;
@@ -33,21 +40,21 @@ class Tile extends SpriteAnimationComponent with TapCallbacks {
     double stepTime = 0.1; // Default step time, adjust as needed
 
     switch (tileType) {
-      case TileType.Red:
+      case TileType.red:
         imagePath = 'tiles/red_tile.png'; // Replace with your actual asset path
         frameCount = 6; // Replace with the actual frame count for red tiles
         break;
-      case TileType.Yellow:
+      case TileType.yellow:
         imagePath =
             'tiles/yellow_tile.png'; // Replace with your actual asset path
         frameCount = 6; // Replace with the actual frame count for yellow tiles
         break;
-      case TileType.Green:
+      case TileType.green:
         imagePath =
             'tiles/green_tile.png'; // Replace with your actual asset path
         frameCount = 9; // Replace with the actual frame count for green tiles
         break;
-      case TileType.Blue:
+      case TileType.blue:
         imagePath =
             'tiles/blue_tile.png'; // Replace with your actual asset path
         frameCount = 4; // Replace with the actual frame count for blue tiles
@@ -74,11 +81,35 @@ class Tile extends SpriteAnimationComponent with TapCallbacks {
 
   @override
   void onTapDown(TapDownEvent event) {
-    // Call the callback function when the tile is tapped
-    onTileTapped(this);
-    print(event);
-    print("Tile tapped!");
+    if (isTapEnabled) {
+      onTileTapped(this);
+      print(event);
+      print("Tile tapped!!!!");
+    }
   }
 
-  void renderPositioned(Canvas canvas, Vector2 vector2) {}
+  void renderPositioned(Canvas canvas, Vector2 vector2) {
+    this.position = position;
+    render(canvas);
+  }
+
+  void startCollectedAnimation() {
+    // Example: Scale animation
+    add(
+      ScaleEffect.to(
+        Vector2.all(1.5), // Scale up to 150%
+        EffectController(
+          duration: 0.5, // Half a second
+          reverseDuration: 0.5, // And then reverse
+        ),
+      )..onComplete =
+          () => removeFromParent(), // Optionally remove after completion
+    );
+  }
+
+  void disableTap() {
+    isTapEnabled = false; // Remove the tap event handler
+  }
+
+ 
 }

@@ -1,90 +1,89 @@
+import 'dart:math';
+
 import 'package:flame/components.dart';
+import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flame/input.dart';
-import 'package:flame/palette.dart';
 import 'package:flutter/material.dart';
 import 'package:shift_wizard_flutter/components/gameboard.dart';
 import 'package:shift_wizard_flutter/components/parallax.dart';
-import 'package:shift_wizard_flutter/components/play_area.dart';
 import 'package:shift_wizard_flutter/components/player.dart';
+import 'package:shift_wizard_flutter/components/stored_cards.dart';
 import 'package:shift_wizard_flutter/components/tile.dart';
-import 'package:shift_wizard_flutter/hud.dart';
-import 'package:flame/text.dart';
+import 'package:shift_wizard_flutter/components/level.dart';
 
-enum WizardState {
-  idle,
-  running,
-}
-
-class ShiftWizardGame extends FlameGame with TapDetector {
+class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
   late GameBoard gameBoard;
-  late CollectedCardDisplay collectedCardDisplay;
-  late HUD hud;
-  late WizardAnimation wizardAnimation;
 
   @override
-  bool debugMode = true;
-
-  ShiftWizardGame()
-      : super(
-        // camera: CameraComponent.withFixedResolution(width: 400, height: 1024),
-        // world: HUD(),
-        ) {}
+  bool debugMode = false;
+  late final CameraComponent cam;
+  Player player = Player();
+  late JoystickComponent joystick;
 
   // Player turn indicator
   List<Tile> player1Collection = [];
   List<Tile> player2Collection = [];
   int currentPlayer = 1; // Start with player 1
 
-  // Method to switch turns
-  void switchTurn() {
-    currentPlayer = currentPlayer == 1 ? 2 : 1;
-    collectedCardDisplay.setCurrentPlayer(currentPlayer);
-  }
+  // Stored elements display
+  late StoredElementsDisplay p1StoredElementsDisplay;
+  late StoredElementsDisplay p2StoredElementsDisplay;
 
-  void handleTileTap(Tile tile) {
-    if (currentPlayer == 1) {
-      player1Collection.add(tile);
-    } else {
-      player2Collection.add(tile);
-    }
-    updateCollectedCardDisplay();
-    switchTurn();
-  }
+  late TextComponent playerTurnText;
 
-  void updateCollectedCardDisplay() {
-    List<Tile> currentPlayerCollection =
-        (currentPlayer == 1) ? player1Collection : player2Collection;
-    collectedCardDisplay.updateCards(currentPlayerCollection);
-  }
+  Point<int>? lastCollectedPositionPlayer1;
+  Point<int>? lastCollectedPositionPlayer2;
 
-  @override
-  void render(Canvas canvas) {
-    super.render(canvas);
-    renderCollectedTiles(canvas, player1Collection, Vector2(10, size.y - 100));
-    renderCollectedTiles(
-        canvas, player2Collection, Vector2(size.x - 210, size.y - 100));
-  }
-
-  void renderCollectedTiles(
-      Canvas canvas, List<Tile> tiles, Vector2 startPosition) {
-    double x = startPosition.x;
-    double y = startPosition.y;
-    for (var tile in tiles) {
-      tile.renderPositioned(canvas, Vector2(x, y));
-      x += tile.size.x + 5;
-      if (x + tile.size.x > size.x) {
-        x = startPosition.x;
-        y -= tile.size.y + 5;
-      }
-    }
-  }
+  bool isFirstRound = true;
 
   @override
   Future<void> onLoad() async {
-    super.onLoad();
+    // Load all images into cache
+    await images.loadAllImages();
+
+    final world = Level(player: player);
+
+    cam = CameraComponent.withFixedResolution(
+        world: world, width: 640, height: 360);
+    cam.viewfinder.anchor = Anchor.topLeft;
+
+    addAll([cam, world]);
 
     add(MyParallaxComponent());
+
+    playerTurnText = TextComponent(
+      text: '', // Initial empty text
+      textRenderer: TextPaint(
+        style: const TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+    // Position the text component at the bottom center of the screen
+    // playerTurnText.position = Vector2(300, 300);
+    // playerTurnText.anchor = Anchor.topCenter;
+    add(playerTurnText);
+    updatePlayerTurnText();
+
+    // Initialize the stored elements display
+    p1StoredElementsDisplay = StoredElementsDisplay(
+      player1Collection,
+      tileSize: Vector2(60, 60),
+      'Player 1',
+    )..position = Vector2(20, 10); // Position on the right side of the screen
+    add(p1StoredElementsDisplay);
+    p2StoredElementsDisplay = StoredElementsDisplay(
+      player2Collection,
+      tileSize: Vector2(60, 60),
+      'Player 2',
+    )..position = Vector2(640, 10); // Position on the right side of the screen
+    add(p2StoredElementsDisplay);
+
+    super.onLoad();
+
     Vector2 tileSize = Vector2(
       // Define the tile size // Set the width and height for each tile
       50.0, 50.0,
@@ -100,101 +99,160 @@ class ShiftWizardGame extends FlameGame with TapDetector {
     gameBoard.position = (size - boardSize) / 2; // Center the gameBoard
     add(gameBoard); // Add the gameBoard to the FlameGame
 
-    collectedCardDisplay = CollectedCardDisplay()
-      ..size = Vector2(200, 300) // Set appropriate size
-      ..position = Vector2(110, 700); // Below the gameboard
-
-    collectedCardDisplay.setCurrentPlayer(currentPlayer);
-    add(collectedCardDisplay);
-
-    // hud = HUD();
-    // add(hud);
-
-    final textRenderer = TextPaint(
-      style: TextStyle(fontSize: 25, color: BasicPalette.white.color),
-    );
-    final textRendererBlk = TextPaint(
-      style: TextStyle(fontSize: 25, color: BasicPalette.black.color),
-    );
-    camera.viewfinder.add(
-      TextButton(
-        text: 'Play Again?',
-        textRenderer: textRenderer,
-        position: Vector2(0, 375),
-        anchor: Anchor.center,
-      ),
-    );
-    camera.viewport.addAll([
-      TextComponent(
-        text: 'SHIFT WIZARD',
-        textRenderer: textRendererBlk,
-        position: Vector2(120, 50),
-      ),
-    ]);
-    // Load animations
-    final runningAnimation = await loadSpriteAnimation(
-      'actors/wizard_animation.png',
-      SpriteAnimationData.sequenced(
-        amount: 4,
-        stepTime: 0.2,
-        textureSize: Vector2(32, 32),
-      ),
-    );
-    final idleAnimation = await loadSpriteAnimation(
-      'actors/wizard_animation.png',
-      SpriteAnimationData.sequenced(
-        amount: 8,
-        stepTime: 0.4,
-        textureSize: Vector2(32, 32),
-      ),
-    );
-
-    // Create and add the WizardAnimation component
-    final wizardAnimation = WizardAnimation(
-      runningAnimation: runningAnimation,
-      idleAnimation: idleAnimation,
-      onTileTapped: (wizard) {
-        // Handle tile tap
-        print('Wizard Tapped!');
-      },
-    );
-    add(wizardAnimation);
+    addJoystick();
   }
 
   @override
   void update(double dt) {
+    updateJoystick();
     super.update(dt);
-    // Update your game state
   }
 
-  // Other game logic methods...
-}
+  // Method to switch turns
+  void switchTurn() {
+    currentPlayer = currentPlayer == 1 ? 2 : 1;
+    updatePlayerTurnText();
+  }
 
-class TextButton extends ButtonComponent {
-  TextButton({
-    required String text,
-    required super.position,
-    super.anchor,
-    TextRenderer? textRenderer,
-  }) : super(
-          button: RectangleComponent(
-            size: Vector2(200, 50),
-            paint: Paint()
-              ..color = Colors.orange
-              ..strokeWidth = 2
-              ..style = PaintingStyle.stroke,
-          ),
-          buttonDown: RectangleComponent(
-            size: Vector2(200, 50),
-            paint: Paint()..color = BasicPalette.orange.color.withOpacity(0.5),
-          ),
-          children: [
-            TextComponent(
-              text: text,
-              textRenderer: textRenderer,
-              position: Vector2(100, 25),
-              anchor: Anchor.center,
-            ),
-          ],
-        );
+  void handleTileTap(Tile tile) {
+    Point<int>? tilePosition = gameBoard.tilePositions[tile];
+    if (tilePosition == null) return;
+    // Check if it's the first round
+    if (isFirstRound) {
+      if (currentPlayer == 2) {
+        isFirstRound = false;
+      }
+      if (!isTileOnPerimeter(tile)) {
+        // If it's the first round and the tile is not on the perimeter, ignore the tap
+        return;
+      }
+    } else {
+      if (!isTileAdjacent(tile)) {
+        // In subsequent rounds, only allow adjacent tiles to be selected
+        return;
+      }
+    }
+    if (currentPlayer == 1) {
+      if (player1Collection.length < 5) {
+        player1Collection.add(tile);
+        lastCollectedPositionPlayer1 = tilePosition;
+        p1StoredElementsDisplay.updateDisplay();
+      }
+    } else {
+      if (player2Collection.length < 5) {
+        player2Collection.add(tile);
+        lastCollectedPositionPlayer2 = tilePosition;
+        p2StoredElementsDisplay.updateDisplay();
+      }
+    }
+    tile.startCollectedAnimation(); // Start the animation
+    switchTurn(); // switch turn even if no element is stored
+  }
+
+  bool isTileOnPerimeter(Tile tile) {
+    Point<int>? position = gameBoard.tilePositions[tile];
+    if (position == null) return false;
+
+    int row = position.y;
+    int col = position.x;
+
+    return row == 0 ||
+        row == gameBoard.rows - 1 ||
+        col == 0 ||
+        col == gameBoard.columns - 1;
+  }
+
+  // bool isFirstRound() {
+  //   return player1Collection.isEmpty || player2Collection.isEmpty;
+  // }
+
+  bool isTileAdjacent(Tile tile) {
+    Point<int>? lastPosition = currentPlayer == 1
+        ? lastCollectedPositionPlayer1
+        : lastCollectedPositionPlayer2;
+    Point<int>? currentPosition = gameBoard.tilePositions[tile];
+    if (currentPosition == null || lastPosition == null) {
+      return false;
+    }
+
+    // Check for adjacency (up, down, left, right)
+    return (currentPosition.x == lastPosition.x &&
+            (currentPosition.y == lastPosition.y - 1 ||
+                currentPosition.y == lastPosition.y + 1)) ||
+        (currentPosition.y == lastPosition.y &&
+            (currentPosition.x == lastPosition.x - 1 ||
+                currentPosition.x == lastPosition.x + 1));
+  }
+
+  void updatePlayerTurnText() {
+    String text;
+    if (currentPlayer == 1) {
+      text =
+          "Player 1's Turn:\nYou may play a Stored Element.\nCollect an Element to end your turn.";
+    } else {
+      text =
+          "Player 2's Turn:\nYou may play a Stored Element.\nCollect an Element to end your turn.";
+    }
+
+    playerTurnText.text = text;
+    playerTurnText.position = Vector2(300, 365);
+  }
+
+  void addJoystick() {
+    joystick = JoystickComponent(
+      knob: SpriteComponent(
+        sprite: Sprite(
+          images.fromCache('hud/knob.png'),
+        ),
+      ),
+      background: SpriteComponent(
+        sprite: Sprite(
+          images.fromCache('hud/joystick.png'),
+        ),
+      ),
+      position: Vector2(50, 50),
+      margin: const EdgeInsets.only(left: 32, bottom: 32),
+    );
+    add(joystick);
+  }
+
+  void updateJoystick() {
+    switch (joystick.direction) {
+      case JoystickDirection.up:
+        player.playerDirection = PlayerDirection.up;
+        player.velocity = Vector2(0, -player.moveSpeed);
+        break;
+      case JoystickDirection.upLeft:
+        player.playerDirection = PlayerDirection.upLeft;
+        player.velocity = Vector2(0, -player.moveSpeed);
+        break;
+      case JoystickDirection.upRight:
+        player.playerDirection = PlayerDirection.upRight;
+        player.velocity = Vector2(0, -player.moveSpeed);
+        break;
+      case JoystickDirection.right:
+        player.playerDirection = PlayerDirection.right;
+        player.velocity = Vector2(player.moveSpeed, 0);
+        break;
+      case JoystickDirection.down:
+        player.playerDirection = PlayerDirection.down;
+        player.velocity = Vector2(0, player.moveSpeed);
+        break;
+      case JoystickDirection.downLeft:
+        player.playerDirection = PlayerDirection.downLeft;
+        player.velocity = Vector2(0, player.moveSpeed);
+        break;
+      case JoystickDirection.downRight:
+        player.playerDirection = PlayerDirection.downRight;
+        player.velocity = Vector2(0, player.moveSpeed);
+        break;
+      case JoystickDirection.left:
+        player.playerDirection = PlayerDirection.left;
+        player.velocity = Vector2(-player.moveSpeed, 0);
+        break;
+      default:
+        player.playerDirection = PlayerDirection.none;
+        break;
+    }
+  }
 }
