@@ -42,12 +42,14 @@ class Tile extends SpriteAnimationComponent
     switch (tileType) {
       case TileType.red:
         imagePath = 'tiles/red_tile.png'; // Replace with your actual asset path
-        frameCount = 6; // Replace with the actual frame count for red tiles
+        frameCount = 6;
+        stepTime = .2; // Replace with the actual frame count for red tiles
         break;
       case TileType.yellow:
         imagePath =
             'tiles/yellow_tile.png'; // Replace with your actual asset path
         frameCount = 6; // Replace with the actual frame count for yellow tiles
+        stepTime = .4;
         break;
       case TileType.green:
         imagePath =
@@ -110,6 +112,4 @@ class Tile extends SpriteAnimationComponent
   void disableTap() {
     isTapEnabled = false; // Remove the tap event handler
   }
-
- 
 }
