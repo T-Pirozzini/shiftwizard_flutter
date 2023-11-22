@@ -66,10 +66,10 @@ flutter:
     # - assets/images/Main Characters/Red Tile/
     # - assets/images/Main Characters/Soulo/
     # - assets/tiles/
-    - assets/images/tiles/red_tile.png
-    - assets/images/tiles/yellow_tile.png
-    - assets/images/tiles/green_tile.png
-    - assets/images/tiles/blue_tile.png    
+    # - assets/images/tiles/red_tile.png
+    # - assets/images/tiles/yellow_tile.png
+    # - assets/images/tiles/green_tile.png
+    - assets/images/tiles/   
     - assets/images/parallax/bg.png  
     - assets/images/parallax/  
     - assets/images/main_characters/wizard/  

@@ -43,13 +43,13 @@ class Tile extends SpriteAnimationComponent
       case TileType.red:
         imagePath = 'tiles/red_tile.png'; // Replace with your actual asset path
         frameCount = 6;
-        stepTime = .2; // Replace with the actual frame count for red tiles
+        stepTime = .25; // Replace with the actual frame count for red tiles
         break;
       case TileType.yellow:
         imagePath =
             'tiles/yellow_tile.png'; // Replace with your actual asset path
-        frameCount = 6; // Replace with the actual frame count for yellow tiles
-        stepTime = .4;
+        frameCount = 5; // Replace with the actual frame count for yellow tiles
+        stepTime = .3;
         break;
       case TileType.green:
         imagePath =
@@ -58,8 +58,9 @@ class Tile extends SpriteAnimationComponent
         break;
       case TileType.blue:
         imagePath =
-            'tiles/blue_tile.png'; // Replace with your actual asset path
-        frameCount = 4; // Replace with the actual frame count for blue tiles
+            'tiles/point_tile.png'; // Replace with your actual asset path
+        frameCount = 5; // Replace with the actual frame count for blue tiles
+        stepTime = .25;
         break;
       default:
         imagePath = 'tiles/default_tile.png'; // Fallback image path
@@ -68,7 +69,7 @@ class Tile extends SpriteAnimationComponent
     }
     final spriteSheet = await _loadSpriteSheet(imagePath, frameCount);
     return spriteSheet.createAnimation(
-        row: 0, stepTime: stepTime, from: 0, to: frameCount - 1);
+        row: 0, stepTime: stepTime, from: 0, to: frameCount);
   }
 
   Future<SpriteSheet> _loadSpriteSheet(String path, int frameCount) async {
@@ -96,17 +97,19 @@ class Tile extends SpriteAnimationComponent
   }
 
   void startCollectedAnimation() {
-    // Example: Scale animation
-    add(
-      ScaleEffect.to(
-        Vector2.all(1.5), // Scale up to 150%
-        EffectController(
-          duration: 0.5, // Half a second
-          reverseDuration: 0.5, // And then reverse
-        ),
-      )..onComplete =
-          () => removeFromParent(), // Optionally remove after completion
-    );
+    // Step 2: Define the Scale animation
+    final scaleEffect = ScaleEffect.to(
+      Vector2.all(1.5),
+      EffectController(
+        duration: 0.5, // Half a second
+        reverseDuration: 0.5, // And then reverse
+      ),
+    )..onComplete = () {
+        // Optionally remove after completion of scale animation
+        // removeFromParent();
+      };
+
+    add(scaleEffect);
   }
 
   void disableTap() {

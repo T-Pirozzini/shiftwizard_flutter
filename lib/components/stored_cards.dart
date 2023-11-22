@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flame/components.dart';
+import 'package:flame/effects.dart';
 import 'package:flutter/material.dart';
 import 'package:shift_wizard_flutter/components/tile.dart';
 
@@ -28,7 +29,7 @@ class StoredElementsDisplay extends PositionComponent {
     super.update(dt);
   }
 
-  void updateDisplay() {
+  void updateDisplay() {    
     removeAll(children); // Clear existing tiles
 
     double y = 50; // Start position for the first tile
