@@ -5,6 +5,7 @@ import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
 import 'package:flame/sprite.dart';
 import 'package:flame/flame.dart';
+import 'package:flutter/material.dart';
 import 'package:shift_wizard_flutter/shiftwizard_game.dart';
 
 enum TileType { red, yellow, green, blue }
@@ -13,6 +14,8 @@ class Tile extends SpriteAnimationComponent
     with HasGameRef<ShiftWizardGame>, TapCallbacks {
   final TileType tileType;
   bool isTapEnabled = true;
+  bool isLastCollected =
+      false; // Flag to indicate if this is the last collected tile
 
   // Add a callback function for when the tile is tapped
   final Function(Tile) onTileTapped;
@@ -107,5 +110,6 @@ class Tile extends SpriteAnimationComponent
   void disableTap() {
     isTapEnabled = false; // Remove the tap event handler
   }
-  
+
+ 
 }

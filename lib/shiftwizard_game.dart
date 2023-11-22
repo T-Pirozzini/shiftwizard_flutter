@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
@@ -14,7 +16,7 @@ class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
   late GameBoard gameBoard;
 
   @override
-  bool debugMode = true;
+  bool debugMode = false;
   late final CameraComponent cam;
   Player player = Player();
   late JoystickComponent joystick;
@@ -29,6 +31,11 @@ class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
   late StoredElementsDisplay p2StoredElementsDisplay;
 
   late TextComponent playerTurnText;
+
+  Point<int>? lastCollectedPositionPlayer1;
+  Point<int>? lastCollectedPositionPlayer2;
+
+  bool isFirstRound = true;
 
   @override
   Future<void> onLoad() async {
@@ -108,20 +115,73 @@ class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
   }
 
   void handleTileTap(Tile tile) {
+    Point<int>? tilePosition = gameBoard.tilePositions[tile];
+    if (tilePosition == null) return;
+    // Check if it's the first round
+    if (isFirstRound) {
+      if (currentPlayer == 2) {
+        isFirstRound = false;
+      }
+      if (!isTileOnPerimeter(tile)) {
+        // If it's the first round and the tile is not on the perimeter, ignore the tap
+        return;
+      }
+    } else {
+      if (!isTileAdjacent(tile)) {
+        // In subsequent rounds, only allow adjacent tiles to be selected
+        return;
+      }
+    }
     if (currentPlayer == 1) {
       if (player1Collection.length < 5) {
         player1Collection.add(tile);
+        lastCollectedPositionPlayer1 = tilePosition;
         p1StoredElementsDisplay.updateDisplay();
-        tile.startCollectedAnimation(); // Start the animation
       }
     } else {
       if (player2Collection.length < 5) {
         player2Collection.add(tile);
+        lastCollectedPositionPlayer2 = tilePosition;
         p2StoredElementsDisplay.updateDisplay();
-        tile.startCollectedAnimation(); // Start the animation
       }
     }
+    tile.startCollectedAnimation(); // Start the animation
     switchTurn(); // switch turn even if no element is stored
+  }
+
+  bool isTileOnPerimeter(Tile tile) {
+    Point<int>? position = gameBoard.tilePositions[tile];
+    if (position == null) return false;
+
+    int row = position.y;
+    int col = position.x;
+
+    return row == 0 ||
+        row == gameBoard.rows - 1 ||
+        col == 0 ||
+        col == gameBoard.columns - 1;
+  }
+
+  // bool isFirstRound() {
+  //   return player1Collection.isEmpty || player2Collection.isEmpty;
+  // }
+
+  bool isTileAdjacent(Tile tile) {
+    Point<int>? lastPosition = currentPlayer == 1
+        ? lastCollectedPositionPlayer1
+        : lastCollectedPositionPlayer2;
+    Point<int>? currentPosition = gameBoard.tilePositions[tile];
+    if (currentPosition == null || lastPosition == null) {
+      return false;
+    }
+
+    // Check for adjacency (up, down, left, right)
+    return (currentPosition.x == lastPosition.x &&
+            (currentPosition.y == lastPosition.y - 1 ||
+                currentPosition.y == lastPosition.y + 1)) ||
+        (currentPosition.y == lastPosition.y &&
+            (currentPosition.x == lastPosition.x - 1 ||
+                currentPosition.x == lastPosition.x + 1));
   }
 
   void updatePlayerTurnText() {
@@ -135,7 +195,7 @@ class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
     }
 
     playerTurnText.text = text;
-    playerTurnText.position = Vector2(300, 360);
+    playerTurnText.position = Vector2(300, 365);
   }
 
   void addJoystick() {

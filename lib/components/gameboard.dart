@@ -1,15 +1,19 @@
+import 'dart:math';
 import 'dart:ui';
 import 'package:flame/components.dart';
 import 'package:flame/input.dart';
+import 'package:flutter/material.dart';
+import 'package:shift_wizard_flutter/shiftwizard_game.dart';
 import 'tile.dart'; // Make sure this points to your Tile class file
 
-class GameBoard extends PositionComponent {
+class GameBoard extends PositionComponent with HasGameRef<ShiftWizardGame> {
   final int rows;
   final int columns;
   late List<Tile> tiles;
   late Vector2 tileSize; // Define the size for each tile
   final double spacing = 15.0; // Define the spacing between tiles
   final Function(Tile) onTileTapped; // Add this line
+  late Map<Tile, Point<int>> tilePositions;
 
   GameBoard(this.rows, this.columns, this.tileSize, this.onTileTapped)
       : super() {
@@ -33,18 +37,19 @@ class GameBoard extends PositionComponent {
   }
 
   List<Tile> generateTiles(Function(Tile) onTileTapped) {
+    tilePositions = {}; // Initialize the map
     List<Tile> generatedTiles = [];
     List<Tile> deck = generateDeck(onTileTapped);
     for (int i = 0; i < rows * columns; i++) {
-      // Calculate the position for each tile
-      Vector2 tilePosition = Vector2(
-        (i % columns) * (tileSize.x + spacing), // x position
-        (i ~/ columns) * (tileSize.y + spacing), // y position
-      );
+      int row = i ~/ columns;
+      int col = i % columns;
+      Vector2 tilePosition =
+          Vector2(col * (tileSize.x + spacing), row * (tileSize.y + spacing));
 
       // Assuming the Tile constructor takes a position
       Tile tile = deck[i];
       tile.position = tilePosition;
+      tilePositions[tile] = Point(col, row); // Store the position in the map
       generatedTiles.add(tile);
     }
     return generatedTiles;
@@ -59,8 +64,17 @@ class GameBoard extends PositionComponent {
   @override
   void render(Canvas canvas) {
     super.render(canvas);
-    // Optional: Custom rendering of the board itself, if needed
+    
+    drawHighlight(canvas, gameRef.lastCollectedPositionPlayer1, Colors.blue);
+    drawHighlight(canvas, gameRef.lastCollectedPositionPlayer2, Colors.red);
   }
 
-  // Optional: Additional methods for handling game logic
+  void drawHighlight(Canvas canvas, Point<int>? position, Color color) {
+    if (position != null) {
+      final paint = Paint()..color = color.withOpacity(0.5);
+      final rect = Rect.fromLTWH(position.x * (tileSize.x + spacing),
+          position.y * (tileSize.y + spacing), tileSize.x, tileSize.y);
+      canvas.drawRect(rect, paint);
+    }
+  }
 }
