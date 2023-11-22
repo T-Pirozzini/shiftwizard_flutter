@@ -20,13 +20,13 @@ class GameBoard extends PositionComponent {
     List<Tile> deck = [];
     // Add 20 tiles of Red, Yellow, and Green each, and 10 Blue tiles
     deck.addAll(List.generate(
-        20, (_) => Tile(tileType: TileType.Red, onTileTapped: onTileTapped)));
+        20, (_) => Tile(tileType: TileType.red, onTileTapped: onTileTapped)));
     deck.addAll(List.generate(20,
-        (_) => Tile(tileType: TileType.Yellow, onTileTapped: onTileTapped)));
+        (_) => Tile(tileType: TileType.yellow, onTileTapped: onTileTapped)));
     deck.addAll(List.generate(
-        20, (_) => Tile(tileType: TileType.Green, onTileTapped: onTileTapped)));
+        20, (_) => Tile(tileType: TileType.green, onTileTapped: onTileTapped)));
     deck.addAll(List.generate(
-        10, (_) => Tile(tileType: TileType.Blue, onTileTapped: onTileTapped)));
+        10, (_) => Tile(tileType: TileType.blue, onTileTapped: onTileTapped)));
 
     deck.shuffle(); // Shuffle the deck
     return deck;

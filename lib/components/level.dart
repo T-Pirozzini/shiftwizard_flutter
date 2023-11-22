@@ -1,5 +1,5 @@
 import 'package:flame/components.dart';
-import 'package:shift_wizard_flutter/actors/player.dart';
+import 'package:shift_wizard_flutter/components/player.dart';
 
 class Level extends World {
   final Player player;

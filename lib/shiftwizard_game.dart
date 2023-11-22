@@ -7,11 +7,11 @@ import 'package:flutter/material.dart';
 import 'package:shift_wizard_flutter/components/gameboard.dart';
 import 'package:shift_wizard_flutter/components/parallax.dart';
 import 'package:shift_wizard_flutter/components/play_area.dart';
-import 'package:shift_wizard_flutter/actors/player.dart';
+import 'package:shift_wizard_flutter/components/player.dart';
 import 'package:shift_wizard_flutter/components/tile.dart';
 import 'package:shift_wizard_flutter/hud.dart';
 import 'package:flame/text.dart';
-import 'package:shift_wizard_flutter/levels/level.dart';
+import 'package:shift_wizard_flutter/components/level.dart';
 
 class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
   late GameBoard gameBoard;
@@ -104,12 +104,12 @@ class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
     gameBoard.position = (size - boardSize) / 2; // Center the gameBoard
     add(gameBoard); // Add the gameBoard to the FlameGame
 
-    // collectedCardDisplay = CollectedCardDisplay()
-    //   ..size = Vector2(200, 300) // Set appropriate size
-    //   ..position = Vector2(110, 700); // Below the gameboard
+    collectedCardDisplay = CollectedCardDisplay()
+      ..size = Vector2(200, 300) // Set appropriate size
+      ..position = Vector2(110, 700); // Below the gameboard
 
-    // collectedCardDisplay.setCurrentPlayer(currentPlayer);
-    // add(collectedCardDisplay);
+    collectedCardDisplay.setCurrentPlayer(currentPlayer);
+    add(collectedCardDisplay);
 
     // hud = HUD();
     // add(hud);
