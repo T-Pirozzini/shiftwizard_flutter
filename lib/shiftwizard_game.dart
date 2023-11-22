@@ -2,22 +2,16 @@ import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flame/input.dart';
-import 'package:flame/palette.dart';
 import 'package:flutter/material.dart';
 import 'package:shift_wizard_flutter/components/gameboard.dart';
 import 'package:shift_wizard_flutter/components/parallax.dart';
-import 'package:shift_wizard_flutter/components/play_area.dart';
 import 'package:shift_wizard_flutter/components/player.dart';
+import 'package:shift_wizard_flutter/components/stored_cards.dart';
 import 'package:shift_wizard_flutter/components/tile.dart';
-import 'package:shift_wizard_flutter/hud.dart';
-import 'package:flame/text.dart';
 import 'package:shift_wizard_flutter/components/level.dart';
 
 class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
   late GameBoard gameBoard;
-  late CollectedCardDisplay collectedCardDisplay;
-  late HUD hud;
-  // late WizardAnimation wizardAnimation;
 
   @override
   bool debugMode = true;
@@ -30,48 +24,27 @@ class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
   List<Tile> player2Collection = [];
   int currentPlayer = 1; // Start with player 1
 
+  // Stored elements display
+  late StoredElementsDisplay p1StoredElementsDisplay;
+  late StoredElementsDisplay p2StoredElementsDisplay;
+
   // Method to switch turns
   void switchTurn() {
     currentPlayer = currentPlayer == 1 ? 2 : 1;
-    collectedCardDisplay.setCurrentPlayer(currentPlayer);
+
+    // collectedCardDisplay.setCurrentPlayer(currentPlayer);
   }
 
   void handleTileTap(Tile tile) {
     if (currentPlayer == 1) {
       player1Collection.add(tile);
+      p1StoredElementsDisplay.updateDisplay();
     } else {
       player2Collection.add(tile);
+      p2StoredElementsDisplay.updateDisplay();
     }
-    updateCollectedCardDisplay();
+    tile.startCollectedAnimation(); // Start the animation
     switchTurn();
-  }
-
-  void updateCollectedCardDisplay() {
-    List<Tile> currentPlayerCollection =
-        (currentPlayer == 1) ? player1Collection : player2Collection;
-    collectedCardDisplay.updateCards(currentPlayerCollection);
-  }
-
-  @override
-  void render(Canvas canvas) {
-    super.render(canvas);
-    renderCollectedTiles(canvas, player1Collection, Vector2(10, size.y - 100));
-    renderCollectedTiles(
-        canvas, player2Collection, Vector2(size.x - 210, size.y - 100));
-  }
-
-  void renderCollectedTiles(
-      Canvas canvas, List<Tile> tiles, Vector2 startPosition) {
-    double x = startPosition.x;
-    double y = startPosition.y;
-    for (var tile in tiles) {
-      tile.renderPositioned(canvas, Vector2(x, y));
-      x += tile.size.x + 5;
-      if (x + tile.size.x > size.x) {
-        x = startPosition.x;
-        y -= tile.size.y + 5;
-      }
-    }
   }
 
   @override
@@ -84,11 +57,40 @@ class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
     cam = CameraComponent.withFixedResolution(
         world: world, width: 640, height: 360);
     cam.viewfinder.anchor = Anchor.topLeft;
+
     addAll([cam, world]);
+
+    camera.viewport.addAll(
+      [
+        // TextComponent(
+        //   text: 'Player 1: Elements',
+        //   position: Vector2(20, 10),
+        // ),
+        // TextComponent(
+        //   text: 'Player 2: Elements',
+        //   position: Vector2(640, 10),
+        // ),
+      ],
+    );
+
+    add(MyParallaxComponent());
+
+    // Initialize the stored elements display
+    p1StoredElementsDisplay = StoredElementsDisplay(
+      player1Collection,
+      tileSize: Vector2(60, 60),
+      'Player 1',
+    )..position = Vector2(20, 10); // Position on the right side of the screen
+    add(p1StoredElementsDisplay);
+    p2StoredElementsDisplay = StoredElementsDisplay(
+      player2Collection,
+      tileSize: Vector2(60, 60),
+      'Player 2',
+    )..position = Vector2(640, 10); // Position on the right side of the screen
+    add(p2StoredElementsDisplay);
 
     super.onLoad();
 
-    add(MyParallaxComponent());
     Vector2 tileSize = Vector2(
       // Define the tile size // Set the width and height for each tile
       50.0, 50.0,
@@ -103,30 +105,6 @@ class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
     );
     gameBoard.position = (size - boardSize) / 2; // Center the gameBoard
     add(gameBoard); // Add the gameBoard to the FlameGame
-
-    collectedCardDisplay = CollectedCardDisplay()
-      ..size = Vector2(200, 300) // Set appropriate size
-      ..position = Vector2(110, 700); // Below the gameboard
-
-    collectedCardDisplay.setCurrentPlayer(currentPlayer);
-    add(collectedCardDisplay);
-
-    // hud = HUD();
-    // add(hud);
-
-    // final textRenderer = TextPaint(
-    //   style: TextStyle(fontSize: 25, color: BasicPalette.white.color),
-    // );
-    // final textRendererBlk = TextPaint(
-    //   style: TextStyle(fontSize: 25, color: BasicPalette.black.color),
-    // );
-    // camera.viewport.addAll([
-    //   TextComponent(
-    //     text: 'SHIFT WIZARD',
-    //     textRenderer: textRendererBlk,
-    //     position: Vector2(120, 50),
-    //   ),
-    // ]);
 
     addJoystick();
   }

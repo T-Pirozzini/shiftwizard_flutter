@@ -11,6 +11,6 @@ void main() async {
 
   ShiftWizardGame game = ShiftWizardGame();
   runApp(
-    GameWidget(game: kDebugMode ? ShiftWizardGame() : game),
+    SafeArea(child: GameWidget(game: kDebugMode ? ShiftWizardGame() : game)),
   );
 }

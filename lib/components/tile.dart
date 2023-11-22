@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flame/components.dart';
+import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
 import 'package:flame/sprite.dart';
 import 'package:flame/flame.dart';
@@ -82,5 +83,22 @@ class Tile extends SpriteAnimationComponent
     print("Tile tapped!!!!");
   }
 
-  void renderPositioned(Canvas canvas, Vector2 vector2) {}
+  void renderPositioned(Canvas canvas, Vector2 vector2) {
+    this.position = position;
+    render(canvas);
+  }
+
+  void startCollectedAnimation() {
+    // Example: Scale animation
+    add(
+      ScaleEffect.to(
+        Vector2.all(1.5), // Scale up to 150%
+        EffectController(
+          duration: 0.5, // Half a second
+          reverseDuration: 0.5, // And then reverse
+        ),
+      )..onComplete =
+          () => removeFromParent(), // Optionally remove after completion
+    );
+  }
 }
