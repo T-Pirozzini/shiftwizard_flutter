@@ -14,6 +14,8 @@ import 'package:shift_wizard_flutter/components/stored_points.dart';
 import 'package:shift_wizard_flutter/components/tile.dart';
 import 'package:shift_wizard_flutter/components/level.dart';
 
+enum MoveEffectDirection { up, down, left, right }
+
 class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
   late GameBoard gameBoard;
 
@@ -116,8 +118,11 @@ class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
     add(gameBoard); // Add the gameBoard to the FlameGame
 
     player1 = Player();
-    player1.position = Vector2(0, 0);
+    player1.position = Vector2(220, 30);
     add(player1);
+    player2 = Player();
+    player2.position = Vector2(600, 30);
+    add(player2);
 
     addJoystick();
   }
@@ -182,8 +187,8 @@ class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
         lastCollectedPositionPlayer2 = tilePosition;
         p2StoredPointsDisplay.updateDisplay();
         tile.startCollectedAnimation();
-        // moveToLastCollectedTile(
-        //     player, lastCollectedPositionPlayer2); // Move the player
+        moveToLastCollectedTile(
+            player2, lastCollectedPositionPlayer2); // Move the player
         if (player2PointsCollection.length >= 3) {
           endGame(2);
           return;
@@ -194,8 +199,8 @@ class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
           lastCollectedPositionPlayer2 = tilePosition;
           p2StoredElementsDisplay.updateDisplay();
           tile.startCollectedAnimation();
-          // moveToLastCollectedTile(
-          //     player, lastCollectedPositionPlayer2); // Move the player
+          moveToLastCollectedTile(
+              player2, lastCollectedPositionPlayer2); // Move the player
         } else {
           lastCollectedPositionPlayer2 = tilePosition;
         }
@@ -277,13 +282,22 @@ class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
       Vector2 targetPosition =
           tileTopLeftPosition + tileCenterOffset + gameBoard.position;
 
+      // // Determine move direction
+      // if (player.position.x < targetPosition.x) {
+      //   player.playerDirection = PlayerDirection.right;
+      // } else if (player.position.x > targetPosition.x) {
+      //   player.playerDirection = PlayerDirection.left;
+      // } else if (player.position.y < targetPosition.y) {
+      //   player.playerDirection = PlayerDirection.down;
+      // } else if (player.position.y > targetPosition.y) {
+      //   player.playerDirection = PlayerDirection.up;
+      // }
+
       // Create the MoveToEffect
       final effect = MoveToEffect(
         targetPosition,
         EffectController(duration: 1),
       );
-
-      // Apply the effect to the player
       player.add(effect);
     }
   }
