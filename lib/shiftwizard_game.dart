@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flame/components.dart';
+import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flame/input.dart';
@@ -19,7 +20,8 @@ class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
   @override
   bool debugMode = false;
   late final CameraComponent cam;
-  Player player = Player();
+  late Player player1;
+  late Player player2;
   late JoystickComponent joystick;
 
   // Player turn indicator
@@ -47,7 +49,7 @@ class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
     // Load all images into cache
     await images.loadAllImages();
 
-    final world = Level(player: player);
+    // final world = Level(player: player1);
 
     cam = CameraComponent.withFixedResolution(
         world: world, width: 640, height: 360);
@@ -113,6 +115,10 @@ class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
     gameBoard.position = (size - boardSize) / 2; // Center the gameBoard
     add(gameBoard); // Add the gameBoard to the FlameGame
 
+    player1 = Player();
+    player1.position = Vector2(0, 0);
+    add(player1);
+
     addJoystick();
   }
 
@@ -152,6 +158,8 @@ class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
         lastCollectedPositionPlayer1 = tilePosition;
         p1StoredPointsDisplay.updateDisplay();
         tile.startCollectedAnimation();
+        moveToLastCollectedTile(
+            player1, lastCollectedPositionPlayer1); // Move the player
         if (player1PointsCollection.length >= 3) {
           endGame(1);
           return;
@@ -162,6 +170,8 @@ class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
           lastCollectedPositionPlayer1 = tilePosition;
           p1StoredElementsDisplay.updateDisplay();
           tile.startCollectedAnimation();
+          moveToLastCollectedTile(
+              player1, lastCollectedPositionPlayer1); // Move the player
         } else {
           lastCollectedPositionPlayer1 = tilePosition;
         }
@@ -172,6 +182,8 @@ class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
         lastCollectedPositionPlayer2 = tilePosition;
         p2StoredPointsDisplay.updateDisplay();
         tile.startCollectedAnimation();
+        // moveToLastCollectedTile(
+        //     player, lastCollectedPositionPlayer2); // Move the player
         if (player2PointsCollection.length >= 3) {
           endGame(2);
           return;
@@ -182,6 +194,8 @@ class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
           lastCollectedPositionPlayer2 = tilePosition;
           p2StoredElementsDisplay.updateDisplay();
           tile.startCollectedAnimation();
+          // moveToLastCollectedTile(
+          //     player, lastCollectedPositionPlayer2); // Move the player
         } else {
           lastCollectedPositionPlayer2 = tilePosition;
         }
@@ -246,6 +260,34 @@ class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
     // showing a dialog, playing a sound, or transitioning to another screen.
   }
 
+  void moveToLastCollectedTile(
+      Player player, Point<int>? lastCollectedPosition) {
+    if (lastCollectedPosition != null) {
+      // Calculate the top-left position of the tile in the game world, including spacing
+      Vector2 tileTopLeftPosition = Vector2(
+        lastCollectedPosition.x * (gameBoard.tileSize.x + gameBoard.spacing),
+        lastCollectedPosition.y * (gameBoard.tileSize.y + gameBoard.spacing),
+      );
+
+      // // Add half the size of a tile to get to its center
+      Vector2 tileCenterOffset =
+          Vector2(gameBoard.tileSize.x / 2 - 10, gameBoard.tileSize.y / 2 - 10);
+
+      // // Combine with the gameBoard's position to get the absolute position
+      Vector2 targetPosition =
+          tileTopLeftPosition + tileCenterOffset + gameBoard.position;
+
+      // Create the MoveToEffect
+      final effect = MoveToEffect(
+        targetPosition,
+        EffectController(duration: 1),
+      );
+
+      // Apply the effect to the player
+      player.add(effect);
+    }
+  }
+
   void addJoystick() {
     joystick = JoystickComponent(
       knob: SpriteComponent(
@@ -267,39 +309,39 @@ class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
   void updateJoystick() {
     switch (joystick.direction) {
       case JoystickDirection.up:
-        player.playerDirection = PlayerDirection.up;
-        player.velocity = Vector2(0, -player.moveSpeed);
+        player1.playerDirection = PlayerDirection.up;
+        player1.velocity = Vector2(0, -player1.moveSpeed);
         break;
       case JoystickDirection.upLeft:
-        player.playerDirection = PlayerDirection.upLeft;
-        player.velocity = Vector2(0, -player.moveSpeed);
+        player1.playerDirection = PlayerDirection.upLeft;
+        player1.velocity = Vector2(0, -player1.moveSpeed);
         break;
       case JoystickDirection.upRight:
-        player.playerDirection = PlayerDirection.upRight;
-        player.velocity = Vector2(0, -player.moveSpeed);
+        player1.playerDirection = PlayerDirection.upRight;
+        player1.velocity = Vector2(0, -player1.moveSpeed);
         break;
       case JoystickDirection.right:
-        player.playerDirection = PlayerDirection.right;
-        player.velocity = Vector2(player.moveSpeed, 0);
+        player1.playerDirection = PlayerDirection.right;
+        player1.velocity = Vector2(player1.moveSpeed, 0);
         break;
       case JoystickDirection.down:
-        player.playerDirection = PlayerDirection.down;
-        player.velocity = Vector2(0, player.moveSpeed);
+        player1.playerDirection = PlayerDirection.down;
+        player1.velocity = Vector2(0, player1.moveSpeed);
         break;
       case JoystickDirection.downLeft:
-        player.playerDirection = PlayerDirection.downLeft;
-        player.velocity = Vector2(0, player.moveSpeed);
+        player1.playerDirection = PlayerDirection.downLeft;
+        player1.velocity = Vector2(0, player1.moveSpeed);
         break;
       case JoystickDirection.downRight:
-        player.playerDirection = PlayerDirection.downRight;
-        player.velocity = Vector2(0, player.moveSpeed);
+        player1.playerDirection = PlayerDirection.downRight;
+        player1.velocity = Vector2(0, player1.moveSpeed);
         break;
       case JoystickDirection.left:
-        player.playerDirection = PlayerDirection.left;
-        player.velocity = Vector2(-player.moveSpeed, 0);
+        player1.playerDirection = PlayerDirection.left;
+        player1.velocity = Vector2(-player1.moveSpeed, 0);
         break;
       default:
-        player.playerDirection = PlayerDirection.none;
+        player1.playerDirection = PlayerDirection.none;
         break;
     }
   }
