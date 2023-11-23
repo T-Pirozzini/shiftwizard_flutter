@@ -8,7 +8,7 @@ import 'package:flame/flame.dart';
 import 'package:flutter/material.dart';
 import 'package:shift_wizard_flutter/shiftwizard_game.dart';
 
-enum TileType { red, yellow, green, blue }
+enum TileType { red, yellow, green, point }
 
 class Tile extends SpriteAnimationComponent
     with HasGameRef<ShiftWizardGame>, TapCallbacks {
@@ -56,7 +56,7 @@ class Tile extends SpriteAnimationComponent
             'tiles/green_tile.png'; // Replace with your actual asset path
         frameCount = 9; // Replace with the actual frame count for green tiles
         break;
-      case TileType.blue:
+      case TileType.point:
         imagePath =
             'tiles/point_tile.png'; // Replace with your actual asset path
         frameCount = 5; // Replace with the actual frame count for blue tiles
@@ -104,11 +104,7 @@ class Tile extends SpriteAnimationComponent
         duration: 0.5, // Half a second
         reverseDuration: 0.5, // And then reverse
       ),
-    )..onComplete = () {
-        // Optionally remove after completion of scale animation
-        // removeFromParent();
-      };
-
+    );
     add(scaleEffect);
   }
 

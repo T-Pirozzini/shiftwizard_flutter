@@ -30,7 +30,7 @@ class GameBoard extends PositionComponent with HasGameRef<ShiftWizardGame> {
     deck.addAll(List.generate(
         20, (_) => Tile(tileType: TileType.green, onTileTapped: onTileTapped)));
     deck.addAll(List.generate(
-        10, (_) => Tile(tileType: TileType.blue, onTileTapped: onTileTapped)));
+        10, (_) => Tile(tileType: TileType.point, onTileTapped: onTileTapped)));
 
     deck.shuffle(); // Shuffle the deck
     return deck;
@@ -64,7 +64,7 @@ class GameBoard extends PositionComponent with HasGameRef<ShiftWizardGame> {
   @override
   void render(Canvas canvas) {
     super.render(canvas);
-    
+
     drawHighlight(canvas, gameRef.lastCollectedPositionPlayer1, Colors.blue);
     drawHighlight(canvas, gameRef.lastCollectedPositionPlayer2, Colors.red);
   }
@@ -72,9 +72,14 @@ class GameBoard extends PositionComponent with HasGameRef<ShiftWizardGame> {
   void drawHighlight(Canvas canvas, Point<int>? position, Color color) {
     if (position != null) {
       final paint = Paint()..color = color.withOpacity(0.5);
-      final rect = Rect.fromLTWH(position.x * (tileSize.x + spacing),
-          position.y * (tileSize.y + spacing), tileSize.x, tileSize.y);
-      canvas.drawRect(rect, paint);
+      // No need to subtract the spacing to position the highlight correctly
+      final highlightRect = Rect.fromLTWH(
+        position.x * (tileSize.x + spacing), // Use the exact tile position
+        position.y * (tileSize.y + spacing), // Use the exact tile position
+        tileSize.x + 10, // Add the spacing to the width
+        tileSize.y + 10, // Add the spacing to the height
+      );
+      canvas.drawRect(highlightRect, paint);
     }
   }
 }
