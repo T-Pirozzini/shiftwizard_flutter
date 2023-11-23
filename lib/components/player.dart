@@ -42,7 +42,7 @@ class Player extends SpriteAnimationGroupComponent
 
   @override
   void update(double dt) {
-    _updatePlayerMovement(dt);
+    updatePlayerMovement(dt);
 
     super.update(dt);
   }
@@ -80,7 +80,7 @@ class Player extends SpriteAnimationGroupComponent
     );
   }
 
-  void _updatePlayerMovement(double dt) {
+  void updatePlayerMovement(double dt) {
     double dirX = 0.0;
     double dirY = 0.0;
 
