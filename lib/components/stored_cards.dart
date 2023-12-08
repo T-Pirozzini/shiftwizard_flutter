@@ -3,14 +3,17 @@ import 'dart:ui';
 
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
+import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 import 'package:shift_wizard_flutter/components/tile.dart';
 
-class StoredElementsDisplay extends PositionComponent {
+class StoredElementsDisplay extends PositionComponent with TapCallbacks {
   final List<Tile> collectedTiles;
   final TextPaint textPaint;
   final Vector2 tileSize;
   final String player;
+
+  bool beenPressed = false;
 
   StoredElementsDisplay(this.collectedTiles, this.player,
       {required this.tileSize})
@@ -29,15 +32,14 @@ class StoredElementsDisplay extends PositionComponent {
     super.update(dt);
   }
 
-  void updateDisplay() {    
+  void updateDisplay() {
     removeAll(children); // Clear existing tiles
 
     double y = 50; // Start position for the first tile
     double x = 0;
     for (var tile in collectedTiles) {
       tile.size = Vector2(32, 32);
-      tile.disableTap(); // Disable tap handling
-
+      // tile.disableTap(); // Disable tap handling
       add(tile..position = Vector2(x, y));
       x += tile.size.y + 5; // Increment Y position for each tile
     }

@@ -5,6 +5,7 @@ import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flame/input.dart';
+import 'package:flame/particles.dart';
 import 'package:flutter/material.dart';
 import 'package:shift_wizard_flutter/components/gameboard.dart';
 import 'package:shift_wizard_flutter/components/parallax.dart';
@@ -45,6 +46,7 @@ class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
   Point<int>? lastCollectedPositionPlayer2;
 
   bool isFirstRound = true;
+  bool isSpellPhase = true;
 
   @override
   Future<void> onLoad() async {
@@ -124,6 +126,9 @@ class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
     player2.position = Vector2(600, 30);
     add(player2);
 
+    giveRandomTileToPlayer(player1);
+    giveRandomTileToPlayer(player2);
+
     addJoystick();
   }
 
@@ -133,15 +138,49 @@ class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
     super.update(dt);
   }
 
+  void giveRandomTileToPlayer(Player player) {
+    var randomTileType = getRandomTileType();
+    var tile = Tile(tileType: randomTileType, onTileTapped: handleTileTap);
+    tile.isStoredCard = true; // Indicate that this is a stored card
+    player.storedElements.add(tile);
+    if (player == player1) {
+      player1Collection.add(tile);
+      p1StoredElementsDisplay.updateDisplay();
+    } else if (player == player2) {
+      player2Collection.add(tile);
+      p2StoredElementsDisplay.updateDisplay();
+    }
+  }
+
+  TileType getRandomTileType() {
+    var rng = Random();
+    switch (rng.nextInt(3)) {
+      case 0:
+        return TileType.red;
+      case 1:
+        return TileType.yellow;
+      case 2:
+        return TileType.green;
+      default:
+        return TileType.red; // Fallback, should not be reached
+    }
+  }
+
   // Method to switch turns
   void switchTurn() {
     currentPlayer = currentPlayer == 1 ? 2 : 1;
+    isSpellPhase = true; // Reset for the new player's turn
     updatePlayerTurnText();
   }
 
   void handleTileTap(Tile tile) {
     Point<int>? tilePosition = gameBoard.tilePositions[tile];
     if (tilePosition == null) return;
+
+    // if (isSpellPhase) {
+    //   // Don't proceed with tile collection, waiting for spell phase to complete
+    //   return;
+    // }
     // Check if it's the first round
     if (isFirstRound) {
       if (currentPlayer == 2) {
@@ -172,6 +211,7 @@ class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
       } else {
         if (player1Collection.length < 5) {
           player1Collection.add(tile);
+          player1.storedElements.add(tile);
           lastCollectedPositionPlayer1 = tilePosition;
           p1StoredElementsDisplay.updateDisplay();
           tile.startCollectedAnimation();
@@ -196,6 +236,7 @@ class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
       } else {
         if (player2Collection.length < 5) {
           player2Collection.add(tile);
+          player2.storedElements.add(tile);
           lastCollectedPositionPlayer2 = tilePosition;
           p2StoredElementsDisplay.updateDisplay();
           tile.startCollectedAnimation();
@@ -206,6 +247,7 @@ class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
         }
       }
     }
+    tile.isStoredCard = true;
     switchTurn(); // switch turn even if no element is stored
   }
 
@@ -245,16 +287,13 @@ class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
   }
 
   void updatePlayerTurnText() {
-    String text;
-    if (currentPlayer == 1) {
-      text =
-          "Player 1's Turn:\nYou may play a Stored Element.\nCollect an Element to end your turn.";
+    if (isSpellPhase) {
+      playerTurnText.text =
+          "Player $currentPlayer's Turn:\nSelect a spell to cast, or skip.";
     } else {
-      text =
-          "Player 2's Turn:\nYou may play a Stored Element.\nCollect an Element to end your turn.";
+      playerTurnText.text =
+          "Player $currentPlayer's Turn:\nCollect an Element to end your turn.";
     }
-
-    playerTurnText.text = text;
     playerTurnText.position = Vector2(300, 365);
   }
 
@@ -282,17 +321,6 @@ class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
       Vector2 targetPosition =
           tileTopLeftPosition + tileCenterOffset + gameBoard.position;
 
-      // // Determine move direction
-      // if (player.position.x < targetPosition.x) {
-      //   player.playerDirection = PlayerDirection.right;
-      // } else if (player.position.x > targetPosition.x) {
-      //   player.playerDirection = PlayerDirection.left;
-      // } else if (player.position.y < targetPosition.y) {
-      //   player.playerDirection = PlayerDirection.down;
-      // } else if (player.position.y > targetPosition.y) {
-      //   player.playerDirection = PlayerDirection.up;
-      // }
-
       // Create the MoveToEffect
       final effect = MoveToEffect(
         targetPosition,
@@ -300,6 +328,103 @@ class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
       );
       player.add(effect);
     }
+  }
+
+  // THIS IS ALL FIRE ELEMENT LOGIC BELOW - LOOK THROUGH AND UNDERSTAND
+  void prepareToDeleteAdjacentTile(Tile redTile) {
+    // Determine the position of the red tile on the game board
+    Point<int>? redTilePosition = gameBoard.tilePositions[redTile];
+
+    if (redTilePosition == null) return;
+
+    // Find adjacent tiles
+    List<Tile> adjacentTiles = getAdjacentTiles(redTilePosition);
+
+    // Highlight the adjacent tiles for selection
+    highlightAdjacentTiles(adjacentTiles);
+
+    // Setup logic to handle player's selection on these adjacent tiles
+    setupSelectionLogic(adjacentTiles);
+  }
+
+  List<Tile> getAdjacentTiles(Point<int> position) {
+    List<Tile> adjacentTiles = [];
+
+    // Define adjacent positions
+    List<Point<int>> adjacentPositions = [
+      Point(position.x, position.y - 1), // Up
+      Point(position.x, position.y + 1), // Down
+      Point(position.x - 1, position.y), // Left
+      Point(position.x + 1, position.y), // Right
+    ];
+
+    for (var adjacentPosition in adjacentPositions) {
+      // Check if the adjacent position is within the bounds of the game board
+      if (isPositionValid(adjacentPosition)) {
+        Tile? adjacentTile = getTileAt(adjacentPosition);
+        if (adjacentTile != null) {
+          adjacentTiles.add(adjacentTile);
+        }
+      }
+    }
+
+    return adjacentTiles;
+  }
+
+  bool isPositionValid(Point<int> position) {
+    return position.x >= 0 &&
+        position.x < gameBoard.columns &&
+        position.y >= 0 &&
+        position.y < gameBoard.rows;
+  }
+
+  Tile? getTileAt(Point<int> position) {
+    // Iterate through the tilePositions map to find the tile at the given position
+    for (var entry in gameBoard.tilePositions.entries) {
+      if (entry.value == position) {
+        // Return the tile if its position matches the given position
+        return entry.key;
+      }
+    }
+    return null; // Return null if no tile is found at the position
+  }
+
+  void highlightAdjacentTiles(List<Tile> tiles) {
+    // Iterate through each tile in the list
+    for (var tile in tiles) {
+      // Set the highlighted property to true
+      tile.highlighted = true;
+
+      // If you have implemented a specific highlight method in your Tile class
+      // tile.highlight(); // Uncomment this if you have a highlight() method in Tile class
+
+      // If you want to add a visual effect (like a border or overlay), you can add it here
+      // Example: Add a border effect to the tile
+      // final borderEffect = BorderEffect(...); // Define your effect according to your needs
+      // tile.add(borderEffect); // Add the effect to the tile
+    }
+  }
+
+  void setupSelectionLogic(List<Tile> tiles) {
+    // Implement logic that allows the player to select one of these tiles
+    // Upon selection, call 'deleteTile' method for the selected tile
+  }
+
+  void deleteTile(Tile tileToDelete) {
+    // Remove the tile from the game and display fire particle effect
+    remove(tileToDelete);
+    addFireParticleEffectAt(tileToDelete.position);
+  }
+
+  void addFireParticleEffectAt(Vector2 position) {
+    final fireParticle = ParticleSystemComponent(
+      particle: Particle.generate(
+        count: 100,
+        generator: (i) => FireParticle(),
+      ),
+      position: position,
+    );
+    add(fireParticle);
   }
 
   void addJoystick() {
@@ -358,5 +483,13 @@ class ShiftWizardGame extends FlameGame with TapDetector, DragCallbacks {
         player1.playerDirection = PlayerDirection.none;
         break;
     }
+  }
+}
+
+class FireParticle extends Particle {
+  @override
+  void render(Canvas canvas) {
+    // Render fire particle
+    // This is where you'd draw your fire particle effect
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:flame/components.dart';
@@ -16,6 +17,8 @@ class Tile extends SpriteAnimationComponent
   bool isTapEnabled = true;
   bool isLastCollected =
       false; // Flag to indicate if this is the last collected tile
+  bool isStoredCard = false; // Flag to indicate if this is a stored card
+  bool highlighted = false;
 
   // Add a callback function for when the tile is tapped
   final Function(Tile) onTileTapped;
@@ -88,7 +91,40 @@ class Tile extends SpriteAnimationComponent
       onTileTapped(this);
       print(event);
       print("Tile tapped!!!!");
+
+      // Check if the tile is a stored card before applying rotation effect
+      if (isStoredCard) {
+        applyRotationEffect();
+        printColor();
+        print("Stored card tapped!");
+      }
     }
+  }
+
+  void applyRotationEffect() {
+    final rotateEffect =
+        RotateEffect.by(2 * pi, EffectController(duration: 0.5));
+    add(rotateEffect);
+  }
+
+  void printColor() {
+    String colorName = '';
+    switch (tileType) {
+      case TileType.red:
+        colorName = 'Red';
+        break;
+      case TileType.yellow:
+        colorName = 'Yellow';
+        break;
+      case TileType.green:
+        colorName = 'Green';
+        break;
+      case TileType.point:
+        colorName = 'Point';
+        break;
+      // Add other cases as necessary
+    }
+    print("Tile color: $colorName");
   }
 
   void renderPositioned(Canvas canvas, Vector2 vector2) {
@@ -110,5 +146,26 @@ class Tile extends SpriteAnimationComponent
 
   void disableTap() {
     isTapEnabled = false; // Remove the tap event handler
+  }
+
+  @override
+  void render(Canvas canvas) {
+    super.render(canvas);
+
+    if (highlighted) {
+      // Draw a highlight effect
+      final paint = Paint()
+        ..color = Colors.yellow.withOpacity(0.5) // Highlight color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3; // Border width
+
+      final highlightRect = Rect.fromLTWH(x, y, width, height);
+      canvas.drawRect(highlightRect, paint);
+    }
+  }
+
+  // Method to toggle highlight
+  void toggleHighlight() {
+    highlighted = !highlighted;
   }
 }
