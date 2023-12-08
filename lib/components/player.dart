@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
+import 'package:shift_wizard_flutter/components/tile.dart';
 import 'package:shift_wizard_flutter/shiftwizard_game.dart';
 
 enum PlayerState { idle, down, right, left, up }
@@ -32,6 +33,8 @@ class Player extends SpriteAnimationGroupComponent
   PlayerDirection playerDirection = PlayerDirection.none;
   double moveSpeed = 100;
   Vector2 velocity = Vector2.zero();
+
+  List<Tile> storedElements = [];
 
   @override
   Future<void> onLoad() async {
